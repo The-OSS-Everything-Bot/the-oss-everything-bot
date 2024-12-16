@@ -16,6 +16,9 @@ security bot for .gg/awfixer
 - Status Monitoring
 - API
 - Endpoint Use
+- Custom Invite
+- New OATH2 Setup
+- User Features for Message Reporting and similar situations
 
 # Languages Used
 
@@ -27,3 +30,13 @@ security bot for .gg/awfixer
 - GraphQL
 - Go
 - Rust
+
+# Help with Development
+
+- You can help with Development by joining .gg/awfixer on Discord, the bots home!
+
+# Help Fund Development
+
+https://awfixer.me/shop
+
+- Visit the AWFixer shop and your purhcases help fund Development
