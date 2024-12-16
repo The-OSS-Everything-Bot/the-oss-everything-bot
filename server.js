@@ -11,12 +11,12 @@ const client = new Client({
 });
 
 // connect to DB
-(async () => {
-  mongoose.set("strictQuery", false);
-  await mongoose.connect(process.env.MONGO_URI);
-
-  console.log("[Info] Connected to MongoDB");
-})();
+//#(async () => {
+//  mongoose.set("strictQuery", false);
+//  await mongoose.connect(process.env.MONGO_URI);
+//
+//  console.log("[Info] Connected to MongoDB");
+//})();
 
 eventHandler(client);
 
