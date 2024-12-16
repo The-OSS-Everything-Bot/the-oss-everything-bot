@@ -1,0 +1,28 @@
+{
+  "name": "first-discord-app",
+  "version": "0.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "commands": "node commands.js"
+  },
+  "keywords": [
+    "discord.js",
+    "templete",
+    "bot",
+    "discord"
+  ],
+  "author": "Omar Saad",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.16.2",
+    "dotenv": "^16.4.5",
+    "fs": "^0.0.1-security",
+    "mongoose": "^8.6.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.10.0"
+  }
+}
