@@ -20,7 +20,7 @@
     "discord.js": "^14.16.2",
     "dotenv": "^16.4.5",
     "fs": "^0.0.1-security",
-    "mongoose": "^8.6.3"
+    "mongoose": "^8.8.3"
   },
   "devDependencies": {
     "eslint": "^9.10.0"
