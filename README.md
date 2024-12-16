@@ -19,6 +19,7 @@ security bot for .gg/awfixer
 
 # Languages Used
 
+- Python
 - Javascript
 - SQL
 - CQL
