@@ -10,7 +10,6 @@ security bot for .gg/awfixer
 - Antinuke
 - Antiraid
 - Role Management
-- Social Notifications
 - Linked Roles (other roles)
 - Linked Roles (external Services)
 - Status Monitoring
@@ -19,6 +18,16 @@ security bot for .gg/awfixer
 - Custom Invite
 - New OATH2 Setup
 - User Features for Message Reporting and similar situations
+
+# Desired Features
+
+- Advanced Verification
+- Advanced Whitelist
+- Social Notifications
+- Youtube Notifications
+- GPT API
+- Search Image
+- Search Whoogle/Google/Duckduckgo/Duckduckno
 
 # Languages Used
 
