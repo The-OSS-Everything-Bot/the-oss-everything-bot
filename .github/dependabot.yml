@@ -1,6 +1,56 @@
 version: 2
 updates:
-  - package-ecosystem: "npm, docker, python, kubernetes" # See documentation for possible values
+  - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      
+  - package-ecosystem: "kubernetes"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "python"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "yarn"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "pnpm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "pip-env"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "daily"
