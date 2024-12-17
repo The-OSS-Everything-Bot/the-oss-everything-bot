@@ -1,6 +1,6 @@
 {
-  "name": "first-discord-app",
-  "version": "0.0.0",
+  "name": "awfixer-security-bot",
+  "version": "0.0.1",
   "description": "",
   "main": "server.js",
   "type": "module",

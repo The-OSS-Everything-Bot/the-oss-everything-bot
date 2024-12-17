@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import env from "dotenv";
 import eventHandler from "./src/handlers/eventHandler.js";
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
 
 env.config();
 
