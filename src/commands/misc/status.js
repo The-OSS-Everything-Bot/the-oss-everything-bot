@@ -70,6 +70,14 @@ export default {
     .setContexts([0, 1]),
 
   async execute(interaction, client) {
+
+    if (!interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
+      return await interaction.reply({
+        content: "You don't have permission to use this command",
+        ephemeral: true,
+      });
+    }
+
     const status = interaction.options.getString("status");
     const message = interaction.options.getString("message");
     const type = interaction.options.getString("activity");
