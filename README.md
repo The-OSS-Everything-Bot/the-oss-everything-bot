@@ -1,10 +1,12 @@
 # awfixer-security-bot
 security bot for .gg/awfixer
 
+# Current Features
+- Tickets
+
 # Features in Progress
 
 - Modmail
-- Tickets
 - Automoderation
 - AI Driven Automod
 - Antinuke
