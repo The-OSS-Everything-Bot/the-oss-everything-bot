@@ -1,9 +1,14 @@
-import { EmbedBuilder, SlashCommandBuilder, ButtonBuilder } from "discord.js";
+import {
+  EmbedBuilder,
+  SlashCommandBuilder,
+  ButtonBuilder,
+  PermissionFlagsBits,
+} from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("ticket")
-    .setDescription("Creates a ticket")
+    .setDescription("Setups a ticket system")
     .setIntegrationTypes([0])
     .setContexts([0])
     .addChannelOption((option) =>
@@ -15,6 +20,13 @@ export default {
 
   async execute(interaction) {
     await interaction.deferReply();
+
+    if (
+      !interaction.member.permissions.has([PermissionFlagsBits.ManageChannels])
+    )
+      return await interaction.editReply({
+        content: "You don't have permission to use this command",
+      });
 
     const channel = interaction.options.getChannel("channel");
 
