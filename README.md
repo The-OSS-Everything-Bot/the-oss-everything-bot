@@ -2,27 +2,28 @@
 security bot for .gg/awfixer
 
 # Current Features
-- Tickets
-- Status Monitoring
+- Tickets (commands)
+- Status Monitoring (commands)
 
 # Features in Progress
 
-- Modmail
 - Automoderation
 - AI Driven Automod
 - Antinuke
 - Antiraid
-- Role Management
+- Role Management (and permissions)
 - Linked Roles (other roles)
 - Linked Roles (external Services)
 - API
 - Endpoint Use
 - Custom Invite
 - New OATH2 Setup
-- User Features for Message Reporting and similar situations
+- User Features for Message Reporting and similar situations (in DMs)
 
 # Desired Features
 
+- Modmail
+- Endpoint user
 - Advanced Verification
 - Advanced Whitelist
 - Social Notifications
