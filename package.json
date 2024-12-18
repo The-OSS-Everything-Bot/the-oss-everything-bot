@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon server.js",
+    "dev": "node server.js",
     "commands": "node commands.js"
   },
   "keywords": [

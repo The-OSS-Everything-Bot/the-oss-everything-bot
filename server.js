@@ -1,13 +1,20 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import env from "dotenv";
 import eventHandler from "./src/handlers/eventHandler.js";
+import { readFileSync, writeFileSync } from "fs";
 // import mongoose from "mongoose";
 
 env.config();
 
 // Create a new client instance
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates
+  ],
 });
 
 // connect to DB
@@ -17,6 +24,14 @@ const client = new Client({
 //
 //  console.log("[Info] Connected to MongoDB");
 //})();
+
+// checks if settings.json exists
+try {
+  readFileSync("./settings.json");
+// eslint-disable-next-line no-unused-vars
+} catch (err) {
+  writeFileSync("./settings.json", "{}");
+}
 
 eventHandler(client);
 

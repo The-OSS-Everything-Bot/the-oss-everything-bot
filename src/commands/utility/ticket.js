@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   PermissionFlagsBits,
 } from "discord.js";
+import { readFileSync, writeFileSync } from "fs";
 
 export default {
   data: new SlashCommandBuilder()
@@ -14,45 +15,76 @@ export default {
     .addChannelOption((option) =>
       option
         .setName("channel")
-        .setDescription("The channel to create the ticket in")
+        .setDescription("The channel to create the ticket tool in")
+        .setRequired(true)
+    )
+    .addChannelOption((option) =>
+      option
+        .setName("category")
+        .setDescription("The category to create tickets in")
         .setRequired(true)
     ),
 
   async execute(interaction) {
     await interaction.deferReply();
 
-    if (
-      !interaction.member.permissions.has([PermissionFlagsBits.ManageChannels])
-    )
-      return await interaction.editReply({
-        content: "You don't have permission to use this command",
+    try {
+      if (
+        !interaction.member.permissions.has([
+          PermissionFlagsBits.ManageChannels,
+        ])
+      )
+        return await interaction.editReply({
+          content: "You don't have permission to use this command",
+        });
+
+      const channel = interaction.options.getChannel("channel");
+      const category = interaction.options.getChannel("category");
+
+      let settings = readFileSync("./settings.json");
+
+      settings = JSON.parse(settings);
+
+      if (!settings["tickets"]) {
+        settings["tickets"] = {};
+      }
+
+      settings["tickets"][interaction.guild.id] = {
+        channel: channel.id,
+        category: category.id,
+      };
+      writeFileSync("./settings.json", JSON.stringify(settings));
+
+      await channel.send({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Ticket")
+            .setDescription("Would you like to create new ticket?"),
+        ],
+        components: [
+          {
+            type: 1,
+            components: [
+              new ButtonBuilder()
+                .setCustomId(`new ticket`)
+                .setLabel("Create ticket")
+                .setStyle(3)
+                .setEmoji("🎫"),
+            ],
+          },
+        ],
       });
 
-    const channel = interaction.options.getChannel("channel");
-
-    await channel.send({
-      embeds: [
-        new EmbedBuilder()
-          .setTitle("Ticket")
-          .setDescription("Would you like to create new ticket?"),
-      ],
-      components: [
-        {
-          type: 1,
-          components: [
-            new ButtonBuilder()
-              .setCustomId(`new ticket`)
-              .setLabel("Create ticket")
-              .setStyle(3)
-              .setEmoji("🎫"),
-          ],
-        },
-      ],
-    });
-
-    await interaction.editReply({
-      content: "Ticket channel setuped successfully",
-      ephemeral: true,
-    });
+      await interaction.editReply({
+        content: "Ticket channel setuped successfully",
+        ephemeral: true,
+      });
+    } catch (err) {
+      await interaction.editReply({
+        content: "Something went wrong",
+        ephemeral: true,
+      });
+      console.log(`[Error] ${err}`);
+    }
   },
 };

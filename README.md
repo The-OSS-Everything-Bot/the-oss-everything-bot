@@ -1,10 +1,13 @@
 # awfixer-security-bot
 security bot for .gg/awfixer
 
+# Current Features
+- Tickets
+- Status Monitoring
+
 # Features in Progress
 
 - Modmail
-- Tickets
 - Automoderation
 - AI Driven Automod
 - Antinuke
@@ -12,7 +15,6 @@ security bot for .gg/awfixer
 - Role Management
 - Linked Roles (other roles)
 - Linked Roles (external Services)
-- Status Monitoring
 - API
 - Endpoint Use
 - Custom Invite
