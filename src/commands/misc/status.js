@@ -1,6 +1,7 @@
 import {
   SlashCommandBuilder,
   ActivityType,
+  PermissionFlagsBits,
 } from "discord.js";
 
 export default {
