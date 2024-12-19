@@ -3,9 +3,10 @@ import getLocalCommands from "../../utils/getLocalCommands.js";
 export default async (client, interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  const command = (await getLocalCommands()).filter(
-    (command) => command.data.name === interaction.commandName
-  )[0];
+  const localCommands = await getLocalCommands();
+  const command = localCommands.find(
+    (cmd) => cmd.data.name === interaction.commandName
+  );
 
   if (!command) {
     console.error(`No command matching ${interaction.commandName} was found.`);
