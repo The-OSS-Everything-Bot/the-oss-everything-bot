@@ -37,9 +37,6 @@
 The original idea for this bot is that no bot does what we want, and since they are close souce, so we are making on that does what we want, and is oss, so that anyone can help and contribute
 
 
-**<h3 align="left">Connect with me:</h3>** 
-<p align="left"><a href="https://github.com/sushilmagare10" target="_blank"><img src="https://img.shields.io/badge/GitHub-100000?logo=github&logoColor=white" height="28" style="margin-right: 4px"></a> <a href="https://www.linkedin.com/in/sushil-magare" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white" height="28" style="margin-right: 4px"></a> <a href="https://twitter.com/Sushil__SM" target="_blank"><img src="https://img.shields.io/badge/Twitter-000000?logo=X&logoColor=white" height="28" style="margin-right: 4px"></a></p>
-
  **<h3 align="left">A discord application that does everything, is open source, and can be contributed  to by anyone. Sound interesting? We hope so! Join us on Discord and you can keep track of development and talk to us about what you think. We hope to see you there.</h3>**
 
 **<h3 align="left">Rapid Fire</h3>**
