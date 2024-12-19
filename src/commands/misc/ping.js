@@ -9,15 +9,8 @@ export default {
 
   async execute(interaction) {
     const start = Date.now();
-
-    if (interaction.isChatInputCommand?.()) {
-      await interaction.deferReply();
-      const ping = Date.now() - start;
-      await interaction.editReply(`Pong! \`${ping}ms\``);
-    } else {
-      const msg = await interaction.reply("Pinging...");
-      const ping = Date.now() - start;
-      await msg.edit(`Pong! \`${ping}ms\``);
-    }
+    await interaction.deferReply();
+    const ping = Date.now() - start;
+    await interaction.editReply(`Pong! \`${ping}ms\``);
   },
 };
