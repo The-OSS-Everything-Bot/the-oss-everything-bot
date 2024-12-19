@@ -4,7 +4,7 @@ import {
   ButtonBuilder,
   PermissionFlagsBits,
 } from "discord.js";
-import { getGuildDB } from "../../utils/dbManager.js";
+import { setGuildTickets } from "../../schemas/guild.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -39,30 +39,11 @@ export default {
 
       const channel = interaction.options.getChannel("channel");
       const category = interaction.options.getChannel("category");
-      const guildDB = await getGuildDB(interaction.guildId);
 
-      await guildDB.execute({
-        sql: `INSERT INTO guild_tickets (guild_id, channel_id, category_id) 
-              VALUES (?, ?, ?)
-              ON CONFLICT (guild_id) 
-              DO UPDATE SET channel_id = ?, category_id = ?, updated_at = strftime('%s', 'now')`,
-        args: [
-          interaction.guildId,
-          channel.id,
-          category.id,
-          channel.id,
-          category.id,
-        ],
+      await setGuildTickets(interaction.guild.id, {
+        channel: channel.id,
+        category: category.id,
       });
-
-      const cacheKey = `guild:${interaction.guildId}:tickets`;
-      await global.redis.set(
-        cacheKey,
-        JSON.stringify({
-          channel_id: channel.id,
-          category_id: category.id,
-        })
-      );
 
       await channel.send({
         embeds: [

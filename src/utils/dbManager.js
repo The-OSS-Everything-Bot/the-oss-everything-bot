@@ -33,19 +33,37 @@ export async function getGuildDB(guildId) {
 
 async function migrateDB(db) {
   try {
-    const columns = await db.execute("PRAGMA table_info(users)");
-    const existingColumns = new Set(columns.rows.map((row) => row.name));
+    const [{ rows: usersColumns }, { rows: ticketsColumns }] = await db.batch([
+      "PRAGMA table_info(users)",
+      "PRAGMA table_info(tickets)",
+    ]);
 
-    const requiredColumns = {
+    const existingUsersColumns = new Set(usersColumns.map((row) => row.name));
+    const existingTicketsColumns = new Set(
+      ticketsColumns.map((row) => row.name)
+    );
+
+    const requiredUsersColumns = {
       bans: "TEXT NOT NULL DEFAULT '[]'",
       kicks: "TEXT NOT NULL DEFAULT '[]'",
       timeouts: "TEXT NOT NULL DEFAULT '[]'",
       jails: "TEXT NOT NULL DEFAULT '[]'",
     };
 
-    for (const [column, type] of Object.entries(requiredColumns)) {
-      if (!existingColumns.has(column)) {
+    for (const [column, type] of Object.entries(requiredUsersColumns)) {
+      if (!existingUsersColumns.has(column)) {
         await db.execute(`ALTER TABLE users ADD COLUMN ${column} ${type}`);
+      }
+    }
+
+    const requiredTicketsColumns = {
+      category: "TEXT NOT NULL",
+      channel: "TEXT NOT NULL",
+    };
+
+    for (const [column, type] of Object.entries(requiredTicketsColumns)) {
+      if (!existingTicketsColumns.has(column)) {
+        await db.execute(`ALTER TABLE tickets ADD COLUMN ${column} ${type}`);
       }
     }
   } catch (error) {
@@ -77,13 +95,10 @@ async function initGuildDB(db) {
   `);
 
   await db.execute(`
-    CREATE TABLE IF NOT EXISTS guild_tickets (
-      guild_id TEXT PRIMARY KEY,
-      channel_id TEXT,
-      category_id TEXT,
-      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
-    )
+      CREATE TABLE IF NOT EXISTS tickets (
+        channel TEXT NOT NULL PRIMARY KEY,
+        category TEXT NOT NULL
+      )
   `);
 
   await db.execute(`

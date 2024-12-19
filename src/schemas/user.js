@@ -4,10 +4,10 @@ const ACTIONS = ["warns", "bans", "kicks", "timeouts", "jails"];
 
 export async function getUser(userId, guildId) {
   const cacheKey = `guild:${guildId}:user:${userId}`;
-  const cachedUser = await global.redis.get(cacheKey);
-  if (cachedUser) {
-    return JSON.parse(cachedUser);
-  }
+  // const cachedUser = await global.redis.get(cacheKey);
+  // if (cachedUser) {
+  //   return JSON.parse(cachedUser);
+  // }
 
   const guildDB = await getGuildDB(guildId);
   const result = await guildDB.execute({
@@ -20,7 +20,7 @@ export async function getUser(userId, guildId) {
   }
 
   const user = result.rows[0];
-  await global.redis.set(cacheKey, JSON.stringify(user));
+  // await global.redis.set(cacheKey, JSON.stringify(user));
   return user;
 }
 
@@ -44,7 +44,7 @@ export async function createUser(userId, guildId, data = {}) {
   });
 
   const cacheKey = `guild:${guildId}:user:${userId}`;
-  await global.redis.set(cacheKey, JSON.stringify(user));
+  // await global.redis.set(cacheKey, JSON.stringify(user));
   return user;
 }
 
@@ -63,6 +63,6 @@ export async function updateUserLogs(userId, guildId, action, logs) {
   user[action] = logs;
 
   const cacheKey = `guild:${guildId}:user:${userId}`;
-  await global.redis.set(cacheKey, JSON.stringify(user));
+  // await global.redis.set(cacheKey, JSON.stringify(user));
   return user;
 }

@@ -1,20 +1,18 @@
 import { ChannelType, EmbedBuilder, PermissionsBitField } from "discord.js";
-import { getGuildTickets } from "../../utils/dbManager.js";
+import { readFileSync } from "fs";
 
 export default async (client, interaction) => {
   if (!interaction.isButton()) return;
 
   try {
     switch (interaction.customId) {
-      case "new ticket": {
-        await interaction.deferReply({ ephemeral: true });
-        const settings = await getGuildTickets(interaction.guildId);
-        if (!settings?.category_id) {
-          return await interaction.editReply({
-            content: "Ticket system not configured",
-            ephemeral: true,
-          });
-        }
+      // new ticket
+      case "new ticket":
+        let category = await getGuildTicket(
+          interaction.guild.id,
+          interaction.channel.id
+        );
+        category = category["category"];
 
         const channel = await interaction.guild.channels.create({
           name: `ticket-${interaction.user.id}`,
@@ -71,9 +69,8 @@ export default async (client, interaction) => {
           ephemeral: true,
         });
         break;
-      }
 
-      case "close ticket": {
+      case "close ticket":
         await interaction.channel.permissionOverwrites.edit(
           interaction.channel.name.split("-")[1],
           { ViewChannel: false }
@@ -84,7 +81,6 @@ export default async (client, interaction) => {
           ephemeral: false,
         });
         break;
-      }
     }
   } catch (error) {
     console.error(`[Error] ${error}`);

@@ -1,56 +1,45 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import env from "dotenv";
-import eventHandler from "./handlers/eventHandler.js";
+import eventHandler from "./src/handlers/eventHandler.js";
+import { readFileSync } from "fs";
 import express from "express";
 import bodyParser from "body-parser";
-import { createClient } from "redis";
-import { createClient as createLibSQL } from "@libsql/client";
-import path from "path";
-import { readFileSync } from "fs";
+import { createClient } from 'redis';
+import { createClient as createLibSQL } from '@libsql/client';
+import path from 'path';
+import getAllFiles from "./utils/getAllFiles.js";
 
 env.config();
 
 const initDatabases = async () => {
   try {
     const redis = createClient({
-      url: process.env.REDIS_URL || "redis://localhost:6379",
+      url: process.env.REDIS_URL || 'redis://localhost:6379'
     });
 
     await redis.connect();
-    console.log("[Info] Connected to Redis");
+    console.log('[Info] Connected to Redis');
 
-    const dbPath = path.join(process.cwd(), "local.db");
+    const dbPath = path.join(process.cwd(), 'local.db');
     const libsql = createLibSQL({
       url: process.env.LIBSQL_URL || `file:${dbPath}`,
-      authToken: process.env.LIBSQL_AUTH_TOKEN,
+      authToken: process.env.LIBSQL_AUTH_TOKEN
     });
 
     try {
-      const migrations = [
-        "./migrations/001_create_users.sql",
-        "./migrations/002_create_guild_settings.sql",
-        "./migrations/003_create_tickets.sql",
-      ];
-
-      for (const migration of migrations) {
-        const migrationSQL = readFileSync(migration, "utf-8");
-        try {
-          await libsql.execute(migrationSQL);
-          console.log(`[Info] Migration ${migration} completed`);
-        } catch (migrationError) {
-          if (!migrationError.message.includes("already exists")) {
-            throw migrationError;
-          }
-        }
+      const migrationSQL = getAllFiles(path.join('./', 'migrations')).map(migration => readFileSync(migration, 'utf8').toString());
+      
+      for (const migration of migrationSQL) {
+        await libsql.execute(migration);
       }
-    } catch (error) {
-      console.error("[Error] Migration failed:", error);
-      throw error;
+      console.log('[Info] LibSQL migrations completed');
+    } catch (migrationError) {
+      console.warn('[Warn] Migration may have already been applied:', migrationError.message);
     }
 
     return { redis, libsql };
   } catch (error) {
-    console.error("[Error] Database initialization failed:", error);
+    console.error('[Error] Database initialization failed:', error);
     process.exit(1);
   }
 };
@@ -88,10 +77,15 @@ const startServer = async () => {
 
     await client.login(process.env.BOT_TOKEN);
     await eventHandler(client);
+
   } catch (error) {
-    console.error("[Error] Server startup failed:", error);
+    console.error('[Error] Server startup failed:', error);
     process.exit(1);
   }
 };
+
+process.on('unhandledRejection', error => {
+  console.error('Unhandled promise rejection:', error);
+});
 
 startServer();
