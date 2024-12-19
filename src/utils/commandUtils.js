@@ -25,13 +25,11 @@ export const createCommandInteraction = (message, args) => ({
         const durationArg = args.find((arg) => /^\d+[dhms]$/.test(arg));
         return durationArg || null;
       }
-
-      const nameIndex = args.findIndex((arg) => arg.startsWith(`--${name}=`));
-      if (nameIndex !== -1) {
-        return args[nameIndex].split("=")[1];
+      if (name === "reason") {
+        const mentionIndex = args.findIndex((arg) => arg.startsWith("<@"));
+        return args.slice(mentionIndex + 1).join(" ") || null;
       }
-      const valueIndex = args.findIndex((arg) => arg === `--${name}`);
-      return valueIndex !== -1 ? args[valueIndex + 1] : null;
+      return null;
     },
     getUser: () => message.mentions.users.first(),
     getChannel: () => message.mentions.channels.first(),
