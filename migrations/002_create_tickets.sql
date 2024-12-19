@@ -1,4 +1,0 @@
-CREATE TABLE IF NOT EXISTS tickets (
-    channel TEXT NOT NULL PRIMARY KEY,
-    category TEXT NOT NULL
-)
