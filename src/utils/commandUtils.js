@@ -13,6 +13,12 @@ export const createCommandInteraction = (message, args) => ({
       typeof options === "string" ? options : options.content || options;
     return message.reply(content);
   },
+  fetchReply: async () => {
+    return {
+      createdTimestamp: Date.now(),
+    };
+  },
+  createdTimestamp: Date.now(),
   options: {
     getString: (name) => {
       if (name === "duration") {
