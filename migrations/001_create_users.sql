@@ -1,4 +1,8 @@
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
-  warns TEXT NOT NULL DEFAULT '[]'
+  warns TEXT NOT NULL DEFAULT '[]',
+  bans TEXT NOT NULL DEFAULT '[]',
+  kicks TEXT NOT NULL DEFAULT '[]',
+  timeouts TEXT NOT NULL DEFAULT '[]',
+  jails TEXT NOT NULL DEFAULT '[]'
 ); 
