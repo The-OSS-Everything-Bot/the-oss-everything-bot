@@ -102,6 +102,7 @@
  
 - localization buttons
 - All the features
+- dark and light mod toggles for the global dom
 
 # awfixer-security-bot-api
 
