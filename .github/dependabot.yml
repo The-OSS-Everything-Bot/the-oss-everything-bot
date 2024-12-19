@@ -9,24 +9,24 @@ updates:
       interval: "daily"
       
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directory: ".github/"
     schedule:
       interval: "daily"
     
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: ".docker/"
     schedule:
       interval: "daily"
       
-  - package-ecosystem: "kubernetes"
-    directory: "/"
-    schedule:
-      interval: "daily"
+  #  - package-ecosystem: "kubernetes"
+  #  directory: "/"
+  #  schedule:
+  #    interval: "daily"
     
-  - package-ecosystem: "python"
-    directory: "/"
-    schedule:
-      interval: "daily"
+  #- package-ecosystem: "python"
+  #  directory: "/"
+  #  schedule:
+  #  interval: "daily"
     
   - package-ecosystem: "bundler"
     directory: "/"
@@ -43,15 +43,15 @@ updates:
     schedule:
       interval: "daily"
     
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "daily"
+  #  - package-ecosystem: "pip"
+  # directory: "/"
+  #  schedule:
+  #    interval: "daily"
     
-  - package-ecosystem: "pip-env"
-    directory: "/"
-    schedule:
-      interval: "daily"
+  #  - package-ecosystem: "pip-env"
+  #  directory: "/"
+  #  schedule:
+  #    interval: "daily"
     
   - package-ecosystem: "cargo"
     directory: "/"
