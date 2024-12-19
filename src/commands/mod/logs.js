@@ -16,7 +16,8 @@ export default {
 
   async execute(interaction) {
     const user = interaction.options.getUser("user");
-    const userData = await getUser(user.id);
+    const guildId = interaction.guildId;
+    const userData = await getUser(user.id, guildId);
 
     if (!userData?.warns?.length) {
       return interaction.reply({
