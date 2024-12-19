@@ -151,10 +151,14 @@ export default {
     try {
       switch (command) {
         case "give":
-          await interaction.guild.members.cache.find((member) => member.id === user.id).roles.add(role.id);
+          await interaction.guild.members.cache
+            .find((member) => member.id === user.id)
+            .roles.add(role.id);
           break;
         case "remove":
-          await interaction.guild.members.cache.find((member) => member.id === user.id).roles.remove(role.id);
+          await interaction.guild.members.cache
+            .find((member) => member.id === user.id)
+            .roles.remove(role.id);
           break;
         case "create":
           await interaction.guild.roles.create({
@@ -166,20 +170,25 @@ export default {
           await interaction.guild.roles.delete(role.id);
           break;
         case "rename":
-          await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({name: name});
+          await interaction.guild.roles.cache
+            .find((r) => r.id === role.id)
+            .edit({ name: name });
           break;
         case "color":
-          await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({color: color});
+          await interaction.guild.roles.cache
+            .find((r) => r.id === role.id)
+            .edit({ color: color });
           break;
         case "icon":
-          await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({icon: icon.url});
+          await interaction.guild.roles.cache
+            .find((r) => r.id === role.id)
+            .edit({ icon: icon.url });
           break;
       }
 
       await interaction.editReply({
         content: `${command} operation successfully`,
       });
-
     } catch (error) {
       console.log(`[error] ${error}`);
       await interaction.editReply({

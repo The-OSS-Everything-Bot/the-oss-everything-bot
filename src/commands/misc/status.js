@@ -71,8 +71,9 @@ export default {
     .setContexts([0, 1]),
 
   async execute(interaction, client) {
-
-    if (!interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
+    if (
+      !interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])
+    ) {
       return await interaction.reply({
         content: "You don't have permission to use this command",
         ephemeral: true,

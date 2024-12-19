@@ -10,17 +10,20 @@ export default async (exceptions = []) => {
     const commandFiles = getAllFiles(commandCategory);
 
     for (const file of commandFiles) {
-        const {default : command} = await import(`../../${file}`)
+      const { default: command } = await import(`../../${file}`);
 
-        
-        if (exceptions.includes(command.data.name)) continue;
-        
-        commands.push(command);
+      if (exceptions.includes(command.data.name)) continue;
+
+      commands.push(command);
     }
 
-    console.log(`[info] Loaded ${commandFiles.length} commands in ${commandCategory}`);
-    console.log(`[files] ${commandFiles.map((file) => file.split(/\\/).pop()).join(" ") || "Empty"}`);
-}
+    console.log(
+      `[info] Loaded ${commandFiles.length} commands in ${commandCategory}`
+    );
+    console.log(
+      `[files] ${commandFiles.map((file) => file.split(/\\/).pop()).join(" ") || "Empty"}`
+    );
+  }
 
   return commands;
 };

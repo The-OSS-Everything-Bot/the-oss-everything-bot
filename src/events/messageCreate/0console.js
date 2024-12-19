@@ -1,3 +1,3 @@
 export default (client, interaction) => {
-    console.log(interaction);
+  console.log(interaction);
 };

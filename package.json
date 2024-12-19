@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "commands": "node commands.js"
+    "commands": "node commands.js",
+    "format": "prettier --write \"src/**/*.js\""
   },
   "keywords": [
     "discord.js",
@@ -25,6 +26,7 @@
     "mongoose": "^8.8.3"
   },
   "devDependencies": {
-    "eslint": "^9.10.0"
+    "eslint": "^9.10.0",
+    "prettier": "^3.4.2"
   }
 }
