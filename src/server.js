@@ -4,9 +4,9 @@ import eventHandler from "./src/handlers/eventHandler.js";
 import { readFileSync } from "fs";
 import express from "express";
 import bodyParser from "body-parser";
-import { createClient } from 'redis';
-import { createClient as createLibSQL } from '@libsql/client';
-import path from 'path';
+import { createClient } from "redis";
+import { createClient as createLibSQL } from "@libsql/client";
+import path from "path";
 import getAllFiles from "./utils/getAllFiles.js";
 
 env.config();
@@ -14,32 +14,37 @@ env.config();
 const initDatabases = async () => {
   try {
     const redis = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379'
+      url: process.env.REDIS_URL || "redis://localhost:6379",
     });
 
     await redis.connect();
-    console.log('[Info] Connected to Redis');
+    console.log("[Info] Connected to Redis");
 
-    const dbPath = path.join(process.cwd(), 'local.db');
+    const dbPath = path.join(process.cwd(), "local.db");
     const libsql = createLibSQL({
       url: process.env.LIBSQL_URL || `file:${dbPath}`,
-      authToken: process.env.LIBSQL_AUTH_TOKEN
+      authToken: process.env.LIBSQL_AUTH_TOKEN,
     });
 
     try {
-      const migrationSQL = getAllFiles(path.join('./', 'migrations')).map(migration => readFileSync(migration, 'utf8').toString());
-      
+      const migrationSQL = getAllFiles(path.join("./", "migrations")).map(
+        (migration) => readFileSync(migration, "utf8").toString()
+      );
+
       for (const migration of migrationSQL) {
         await libsql.execute(migration);
       }
-      console.log('[Info] LibSQL migrations completed');
+      console.log("[Info] LibSQL migrations completed");
     } catch (migrationError) {
-      console.warn('[Warn] Migration may have already been applied:', migrationError.message);
+      console.warn(
+        "[Warn] Migration may have already been applied:",
+        migrationError.message
+      );
     }
 
     return { redis, libsql };
   } catch (error) {
-    console.error('[Error] Database initialization failed:', error);
+    console.error("[Error] Database initialization failed:", error);
     process.exit(1);
   }
 };
@@ -77,15 +82,14 @@ const startServer = async () => {
 
     await client.login(process.env.BOT_TOKEN);
     await eventHandler(client);
-
   } catch (error) {
-    console.error('[Error] Server startup failed:', error);
+    console.error("[Error] Server startup failed:", error);
     process.exit(1);
   }
 };
 
-process.on('unhandledRejection', error => {
-  console.error('Unhandled promise rejection:', error);
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
 });
 
 startServer();
