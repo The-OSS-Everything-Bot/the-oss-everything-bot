@@ -8,11 +8,16 @@ export default {
     .setContexts([0, 1, 2]),
 
   async execute(interaction) {
-    await interaction.deferReply();
+    const start = Date.now();
 
-    const reply = await interaction.fetchReply();
-    const ping = reply.createdTimestamp - interaction.createdTimestamp;
-
-    interaction.editReply(`Pong! \`${ping}ms\``);
+    if (interaction.isChatInputCommand?.()) {
+      await interaction.deferReply();
+      const ping = Date.now() - start;
+      await interaction.editReply(`Pong! \`${ping}ms\``);
+    } else {
+      const msg = await interaction.reply("Pinging...");
+      const ping = Date.now() - start;
+      await msg.edit(`Pong! \`${ping}ms\``);
+    }
   },
 };
