@@ -1,24 +1,24 @@
 import { ChannelType, EmbedBuilder, PermissionsBitField } from "discord.js";
-import { readFileSync } from "fs";
+import { getGuildTickets } from "../../utils/dbManager.js";
 
 export default async (client, interaction) => {
   if (!interaction.isButton()) return;
-  if (!interaction.customId.split(" ")[1] == "ticket") return;
 
   try {
-    await interaction.deferReply({ ephemeral: true });
     switch (interaction.customId) {
-      // new ticket
-      case "new ticket":
-        const category = JSON.parse(readFileSync("./settings.json"))["tickets"][
-          interaction.guild.id
-        ].category;
-
-        console.log(category);
+      case "new ticket": {
+        await interaction.deferReply({ ephemeral: true });
+        const settings = await getGuildTickets(interaction.guildId);
+        if (!settings?.category_id) {
+          return await interaction.editReply({
+            content: "Ticket system not configured",
+            ephemeral: true,
+          });
+        }
 
         const channel = await interaction.guild.channels.create({
           name: `ticket-${interaction.user.id}`,
-          parent: category,
+          parent: settings.category_id,
           permissionOverwrites: [
             {
               id: interaction.guild.roles.everyone.id,
@@ -58,7 +58,7 @@ export default async (client, interaction) => {
                   type: 2,
                   label: "Close",
                   style: 4,
-                  customId: "close",
+                  customId: "close ticket",
                   emoji: "🔒",
                 },
               ],
@@ -71,22 +71,28 @@ export default async (client, interaction) => {
           ephemeral: true,
         });
         break;
+      }
 
-      // close ticket
-      case "close ticket":
-        // remove read permission from all users
+      case "close ticket": {
         await interaction.channel.permissionOverwrites.edit(
           interaction.channel.name.split("-")[1],
           { ViewChannel: false }
         );
 
-        await interaction.editReply({
+        await interaction.reply({
           content: "Ticket closed",
           ephemeral: false,
         });
+        break;
+      }
     }
   } catch (error) {
-    interaction.editReply("Something went wrong");
-    console.log(`[error] ${error}`);
+    console.error(`[Error] ${error}`);
+    await interaction
+      .reply({
+        content: "Something went wrong",
+        ephemeral: true,
+      })
+      .catch(() => {});
   }
 };

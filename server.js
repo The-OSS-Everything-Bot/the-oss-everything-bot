@@ -1,12 +1,12 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import env from "dotenv";
 import eventHandler from "./src/handlers/eventHandler.js";
-import { readFileSync, writeFileSync } from "fs";
 import express from "express";
 import bodyParser from "body-parser";
 import { createClient } from 'redis';
 import { createClient as createLibSQL } from '@libsql/client';
 import path from 'path';
+import { readFileSync } from "fs";
 
 env.config();
 
@@ -26,11 +26,24 @@ const initDatabases = async () => {
     });
 
     try {
-      const migrationSQL = readFileSync('./migrations/001_create_users.sql', 'utf-8');
-      await libsql.execute(migrationSQL);
-      console.log('[Info] LibSQL migrations completed');
-    } catch (migrationError) {
-      console.warn('[Warn] Migration may have already been applied:', migrationError.message);
+      const migrations = [
+        './migrations/001_create_users.sql',
+        './migrations/002_create_guild_settings.sql',
+        './migrations/003_create_tickets.sql'
+      ];
+
+      for (const migration of migrations) {
+        const migrationSQL = readFileSync(migration, 'utf-8');
+        try {
+          await libsql.execute(migrationSQL);
+          console.log(`[Info] Migration ${migration} completed`);
+        } catch (migrationError) {
+          console.warn(`[Warn] Migration ${migration} may have already been applied:`, migrationError.message);
+        }
+      }
+    } catch (error) {
+      console.error('[Error] Migration failed:', error);
+      throw error;
     }
 
     return { redis, libsql };
@@ -70,12 +83,6 @@ const startServer = async () => {
         GatewayIntentBits.GuildModeration,
       ],
     });
-
-    try {
-      readFileSync("./settings.json");
-    } catch (err) {
-      writeFileSync("./settings.json", "{}");
-    }
 
     await client.login(process.env.BOT_TOKEN);
     await eventHandler(client);
