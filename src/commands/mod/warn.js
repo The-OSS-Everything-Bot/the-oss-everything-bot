@@ -1,5 +1,5 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import { getUser, createUser, updateUserWarns } from "../../schemas/user.js";
+import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -40,16 +40,20 @@ export default {
       });
 
       if (!userData) {
-        await createUser(user.id, guildId, warns);
+        await createUser(user.id, guildId, { warns });
       } else {
-        await updateUserWarns(user.id, guildId, warns);
+        await updateUserLogs(user.id, guildId, "warns", warns);
       }
 
       interaction.reply({
-        content: `Warned ${interaction.options.getUser("user")}`,
+        content: `Warned <@${interaction.options.getUser("user").id}>`,
       });
     } catch (error) {
-      console.log("\x1b[31m", `[Error] ${error} at warn.js`);
+      console.error("\x1b[31m", `[Error] ${error} at warn.js`);
+      await interaction.reply({
+        content: "An error occurred while warning the user",
+        ephemeral: true,
+      });
     }
   },
 };

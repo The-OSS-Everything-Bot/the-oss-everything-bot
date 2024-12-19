@@ -1,4 +1,5 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -27,7 +28,7 @@ export default {
     .setIntegrationTypes([0, 1])
     .setContexts([0, 1]),
 
-  async execute(interaction, client) {
+  async execute(interaction) {
     await interaction.deferReply();
 
     if (!interaction.member.permissions.has([PermissionFlagsBits.KickMembers]))
@@ -38,7 +39,7 @@ export default {
 
     try {
       const user = interaction.options.getMember("user");
-      const reason = interaction.options.getString("reason");
+      const reason = interaction.options.getString("reason") || "Not provided";
       let duration = interaction.options.getString("duration");
 
       duration = duration
@@ -51,16 +52,31 @@ export default {
         const guild = await interaction.client.guilds.cache.get(guildID);
         const member = await guild.members.fetch(user);
 
-        if (!member) return;
+        if (!member) continue;
         await member.timeout(eval(duration), reason);
+
+        let userData = await getUser(user.id, guildID);
+        let timeouts = userData?.timeouts || [];
+
+        timeouts.push({
+          reason,
+          duration: eval(duration),
+          by: interaction.user.id,
+          createdAt: Date.now(),
+        });
+
+        if (!userData) {
+          await createUser(user.id, guildID, { timeouts });
+        } else {
+          await updateUserLogs(user.id, guildID, "timeouts", timeouts);
+        }
       }
 
-      await interaction.editReply(`Timed out ${user}`);
+      await interaction.editReply(`Timed out <@${user.id}>`);
     } catch (err) {
-      console.log("\u001b[31m", `[Error] ${err} at timeout.js`);
-
+      console.error("\u001b[31m", `[Error] ${err} at timeout.js`);
       await interaction.editReply({
-        content: "An error occured",
+        content: "An error occurred",
         ephemeral: true,
       });
     }

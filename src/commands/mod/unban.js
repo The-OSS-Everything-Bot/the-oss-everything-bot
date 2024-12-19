@@ -3,16 +3,13 @@ import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("ban")
-    .setDescription("Bans a user")
+    .setName("unban")
+    .setDescription("Unbans a user")
     .addUserOption((option) =>
-      option.setName("user").setDescription("The user to ban").setRequired(true)
-    )
-    .addStringOption((option) =>
       option
-        .setName("reason")
-        .setDescription("The reason for the ban")
-        .setRequired(false)
+        .setName("user")
+        .setDescription("The user to unban")
+        .setRequired(true)
     )
     .setIntegrationTypes([0, 1])
     .setContexts([0, 1]),
@@ -25,20 +22,20 @@ export default {
       });
 
     const user = interaction.options.getUser("user");
-    const reason = interaction.options.getString("reason") || "Not provided";
 
     try {
       for (const guildID of process.env.GUILDS.split(",")) {
         const guild = await interaction.client.guilds.cache.get(guildID);
-        await guild.members.ban(user, { reason });
+        await guild.members.unban(user);
 
         let userData = await getUser(user.id, guildID);
         let bans = userData?.bans || [];
 
         bans.push({
-          reason,
+          reason: "Unbanned",
           by: interaction.user.id,
           createdAt: Date.now(),
+          type: "unban",
         });
 
         if (!userData) {
@@ -48,11 +45,11 @@ export default {
         }
       }
 
-      await interaction.reply(`Banned <@${user.id}>`);
+      await interaction.reply(`Unbanned <@${user.id}>`);
     } catch (error) {
       console.error(error);
       await interaction.reply({
-        content: "An error occurred while banning the user",
+        content: "An error occurred while unbanning the user",
         ephemeral: true,
       });
     }

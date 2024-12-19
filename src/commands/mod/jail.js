@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
 } from "discord.js";
+import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -46,6 +47,10 @@ export default {
 
     try {
       const user = interaction.options.getMember("user");
+      const reason = interaction.options.getString("reason") || "Not provided";
+      const duration = interaction.options.getString("duration");
+      const jailChannel = interaction.options.getChannel("channel");
+      const parentCategory = jailChannel.parent;
 
       if (user.roles.cache.some((role) => role.name === "Jailed")) {
         return await interaction.reply({
@@ -53,12 +58,6 @@ export default {
           ephemeral: true,
         });
       }
-
-      const jailChannel = interaction.options.getChannel("channel");
-      const reason =
-        interaction.options.getString("reason") || "No reason provided";
-      const duration = interaction.options.getString("duration");
-      const parentCategory = jailChannel.parent;
 
       let jailRole = interaction.guild.roles.cache.find(
         (role) => role.name === "Jailed"
@@ -102,7 +101,24 @@ export default {
         }
       }
 
-      await interaction.reply(`Jailed ${interaction.options.getUser("user")}`);
+      let userData = await getUser(user.id, interaction.guildId);
+      let jails = userData?.jails || [];
+
+      jails.push({
+        reason,
+        duration: duration || "Permanent",
+        by: interaction.user.id,
+        createdAt: Date.now(),
+        removedRoles,
+      });
+
+      if (!userData) {
+        await createUser(user.id, interaction.guildId, { jails });
+      } else {
+        await updateUserLogs(user.id, interaction.guildId, "jails", jails);
+      }
+
+      await interaction.reply(`Jailed ${user}`);
 
       if (duration) {
         const time = duration
@@ -119,7 +135,7 @@ export default {
         }, eval(time));
       }
     } catch (error) {
-      console.log("\x1b[31m", `[Error] ${error} at jail.js`);
+      console.error("\x1b[31m", `[Error] ${error} at jail.js`);
       await interaction.reply({
         content: "An error occurred while trying to jail the user",
         ephemeral: true,

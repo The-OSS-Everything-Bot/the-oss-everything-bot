@@ -19,7 +19,18 @@ export default {
     const guildId = interaction.guildId;
     const userData = await getUser(user.id, guildId);
 
-    if (!userData?.warns?.length) {
+    if (!userData) {
+      return interaction.reply({
+        content: "This user has no moderation logs",
+        ephemeral: true,
+      });
+    }
+
+    const hasLogs = Object.values(userData).some(
+      (logs) => Array.isArray(logs) && logs.length > 0
+    );
+
+    if (!hasLogs) {
       return interaction.reply({
         content: "This user has no moderation logs",
         ephemeral: true,
@@ -28,14 +39,6 @@ export default {
 
     const embed = new EmbedBuilder()
       .setTitle(`Moderation Logs for ${user.tag}`)
-      .setDescription(
-        userData.warns
-          .map(
-            ({ reason, by, createdAt }) =>
-              `**Warn:** ${reason}\n**By:** <@${by}>\n**Date:** ${new Date(createdAt).toLocaleString()}\n`
-          )
-          .join("\n")
-      )
       .setAuthor({
         name: `ID: ${user.id}`,
         iconURL: user.displayAvatarURL(),
@@ -45,6 +48,24 @@ export default {
         iconURL: interaction.user.displayAvatarURL(),
       })
       .setColor(0x00ff00);
+
+    const addLogsToEmbed = (actionType, logs) => {
+      if (!logs?.length) return;
+
+      embed.addFields({
+        name: actionType.charAt(0).toUpperCase() + actionType.slice(1),
+        value: logs
+          .map(
+            ({ reason, by, createdAt }) =>
+              `**By:** <@${by}>\n**Reason:** ${reason}\n**Date:** ${new Date(createdAt).toLocaleString()}`
+          )
+          .join("\n\n"),
+      });
+    };
+
+    ["warns", "bans", "kicks", "timeouts", "jails"].forEach((actionType) => {
+      addLogsToEmbed(actionType, userData[actionType]);
+    });
 
     return interaction.reply({ embeds: [embed] });
   },
