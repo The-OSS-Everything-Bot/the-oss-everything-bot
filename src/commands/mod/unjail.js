@@ -24,7 +24,7 @@ export default {
       });
 
     try {
-      const user = interaction.options.getMember("user");
+      const user = interaction.options.getUser("user");
       let userData = await getUser(user.id, interaction.guildId);
 
       if (!userData?.jails?.length) {

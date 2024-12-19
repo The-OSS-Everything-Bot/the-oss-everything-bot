@@ -46,7 +46,7 @@ export default {
       });
 
     try {
-      const user = interaction.options.getMember("user");
+      const user = interaction.options.getUser("user");
       const reason = interaction.options.getString("reason") || "Not provided";
       const duration = interaction.options.getString("duration");
       const jailChannel = interaction.options.getChannel("channel");
