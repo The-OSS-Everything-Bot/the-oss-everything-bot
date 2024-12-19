@@ -1,14 +1,26 @@
 import handleServerLogs from "../serverEvents/handleServerLogs.js";
 
 export default async (client, oldMember, newMember) => {
-  if (!oldMember || !newMember) return;
+  if (!oldMember?.roles || !newMember?.roles) return;
+
+  const changes = [];
+
+  if (oldMember.roles.cache.size !== newMember.roles.cache.size) {
+    changes.push("roles");
+  }
+
+  if (oldMember.nickname !== newMember.nickname) {
+    changes.push("nickname");
+  }
 
   if (
-    oldMember.roles.cache.size !== newMember.roles.cache.size ||
-    oldMember.nickname !== newMember.nickname ||
     oldMember.communicationDisabledUntil !==
-      newMember.communicationDisabledUntil
+    newMember.communicationDisabledUntil
   ) {
+    changes.push("timeout");
+  }
+
+  if (changes.length > 0) {
     await handleServerLogs(client, newMember.guild, "MEMBER_UPDATE");
   }
 };
