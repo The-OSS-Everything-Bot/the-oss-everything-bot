@@ -94,12 +94,13 @@
 - OATH2 integration with git for sysadmin access
 - automation with cloudflare and docker for custom bots
 - automation with yaml to allow for settings config like database on the fly
-- configure 
-
+- configure connections to a single libsql database per server that the bot is in
+- configure a way for the dashboard to Interaction with the stripe part of the api
 
 
 ## Desired Features
-
+ 
+- localization buttons
 - All the features
 
 # awfixer-security-bot-api
@@ -112,7 +113,7 @@
 
 - Stripe Interactions
 
-## Desired Features
+##https://github.com/The-OSS-Everything-Bot/the-oss-everythig-bot Desired Features
 
 - OpenAPI compatiblity with other applications
 
@@ -120,7 +121,7 @@
 
 # Help with Development
 
-- You can help with Development by joining .gg/awfixer on Discord, the bots home!
+- You can help with Development by joining [.gg/awfixer](https://discord.gg/awfixer) on Discord, the bots home!
 
 # Help Fund Development
 
