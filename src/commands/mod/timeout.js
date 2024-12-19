@@ -38,7 +38,7 @@ export default {
       });
 
     try {
-      const user = interaction.options.getMember("user");
+      const user = interaction.options.getUser("user");
       const reason = interaction.options.getString("reason") || "Not provided";
       let duration = interaction.options.getString("duration");
 
@@ -48,19 +48,23 @@ export default {
         .replace("m", " * 60 * 1000")
         .replace("s", " * 1000");
 
+      const timeoutDuration = eval(duration);
+
       for (const guildID of process.env.GUILDS.split(",")) {
         const guild = await interaction.client.guilds.cache.get(guildID);
-        const member = await guild.members.fetch(user);
+        if (!guild) continue;
 
+        const member = await guild.members.fetch(user.id).catch(() => null);
         if (!member) continue;
-        await member.timeout(eval(duration), reason);
+
+        await member.timeout(timeoutDuration, reason);
 
         let userData = await getUser(user.id, guildID);
         let timeouts = userData?.timeouts || [];
 
         timeouts.push({
           reason,
-          duration: eval(duration),
+          duration: timeoutDuration,
           by: interaction.user.id,
           createdAt: Date.now(),
         });
@@ -76,7 +80,7 @@ export default {
     } catch (err) {
       console.error("\u001b[31m", `[Error] ${err} at timeout.js`);
       await interaction.editReply({
-        content: "An error occurred",
+        content: "An error occurred while timing out the user",
         ephemeral: true,
       });
     }
