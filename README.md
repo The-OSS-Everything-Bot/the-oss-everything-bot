@@ -10,6 +10,35 @@
   </ul>
 </div>
 
+
+
+# AWFixer Security Bot
+
+## A Beta-Dev-Staging Version of the bot for the AWFixer and Friends Server, allowing us to test the features and show them off in productions
+
+<div align="center">
+    <p align="center">
+        <a href="https://github.com/the-oss-everythig-bot/the-oss-everything-bot/forks">
+            <img alt="Forks" src="https://img.shields.io/github/commit-activity/m/the-oss-everything-bot/the-oss-everything-bot?style=for-the-badge&logo=git&color=EBA0AC&logoColor=EBA0AC&labelColor=302D41"></a>
+        <a href="https://github.com/the-oss-everything-bot/the-oss-everything-bot">
+            <img alt="Repo size" src="https://img.shields.io/github/repo-size/the-oss-everything-bot/the-oss-everything-bot?style=for-the-badge&logo=github&color=FAB387&logoColor=FAB387&labelColor=302D41"/></a>
+        <a href="https://github.com/the-oss-everything-bot/the-oss-everything-bot/issues">
+            <img alt="Issues" src="https://img.shields.io/github/issues/the-oss-everything-bot/the-oss-everything-bot?style=for-the-badge&logo=githubactions&color=F9E2AF&logoColor=F9E2AF&labelColor=302D41"></a>
+        <a href="https://discord.gg/awfixer">
+            <img alt="Discord" src="https://img.shields.io/discord/1297444443103956992?style=for-the-badge&logo=discord&color=B4BEFE&logoColor=B4BEFE&labelColor=302D41"></a>
+    </p>
+</div>
+
+> [!WARNING]
+**This bot (without plenty of tweaking) is not ready for production use, we suggest against using it until announced. Join our support server: [AWFixer and Friends](https://discord.gg/awfixer) for more info!**
+
+## About
+
+Tux is an all in one Discord bot for the All Things Linux Discord server.
+
+It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
+
+
 **<h3 align="left">Connect with me:</h3>** 
 <p align="left"><a href="https://github.com/sushilmagare10" target="_blank"><img src="https://img.shields.io/badge/GitHub-100000?logo=github&logoColor=white" height="28" style="margin-right: 4px"></a> <a href="https://www.linkedin.com/in/sushil-magare" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white" height="28" style="margin-right: 4px"></a> <a href="https://twitter.com/Sushil__SM" target="_blank"><img src="https://img.shields.io/badge/Twitter-000000?logo=X&logoColor=white" height="28" style="margin-right: 4px"></a></p>
 
