@@ -28,24 +28,22 @@ export default {
     const reason = interaction.options.getString("reason") || "Not provided";
 
     try {
-      for (const guildID of process.env.GUILDS.split(",")) {
-        const guild = await interaction.client.guilds.cache.get(guildID);
-        await guild.members.ban(user, { reason });
+      const guild = interaction.guild;
+      await guild.members.ban(user, { reason });
 
-        let userData = await getUser(user.id, guildID);
-        let bans = userData?.bans || [];
+      let userData = await getUser(user.id, guild.id);
+      let bans = userData?.bans || [];
 
-        bans.push({
-          reason,
-          by: interaction.user.id,
-          createdAt: Date.now(),
-        });
+      bans.push({
+        reason,
+        by: interaction.user.id,
+        createdAt: Date.now(),
+      });
 
-        if (!userData) {
-          await createUser(user.id, guildID, { bans });
-        } else {
-          await updateUserLogs(user.id, guildID, "bans", bans);
-        }
+      if (!userData) {
+        await createUser(user.id, guild.id, { bans });
+      } else {
+        await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
       await interaction.reply(`Banned <@${user.id}>`);

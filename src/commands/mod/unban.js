@@ -24,25 +24,23 @@ export default {
     const user = interaction.options.getUser("user");
 
     try {
-      for (const guildID of process.env.GUILDS.split(",")) {
-        const guild = await interaction.client.guilds.cache.get(guildID);
-        await guild.members.unban(user);
+      const guild = interaction.guild;
+      await guild.members.unban(user);
 
-        let userData = await getUser(user.id, guildID);
-        let bans = userData?.bans || [];
+      let userData = await getUser(user.id, guild.id);
+      let bans = userData?.bans || [];
 
-        bans.push({
-          reason: "Unbanned",
-          by: interaction.user.id,
-          createdAt: Date.now(),
-          type: "unban",
-        });
+      bans.push({
+        reason: "Unbanned",
+        by: interaction.user.id,
+        createdAt: Date.now(),
+        type: "unban",
+      });
 
-        if (!userData) {
-          await createUser(user.id, guildID, { bans });
-        } else {
-          await updateUserLogs(user.id, guildID, "bans", bans);
-        }
+      if (!userData) {
+        await createUser(user.id, guild.id, { bans });
+      } else {
+        await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
       await interaction.reply(`Unbanned <@${user.id}>`);

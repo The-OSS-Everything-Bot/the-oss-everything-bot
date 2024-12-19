@@ -50,30 +50,32 @@ export default {
 
       const timeoutDuration = eval(duration);
 
-      for (const guildID of process.env.GUILDS.split(",")) {
-        const guild = await interaction.client.guilds.cache.get(guildID);
-        if (!guild) continue;
+      const guild = interaction.guild;
+      const member = await guild.members.fetch(user.id).catch(() => null);
 
-        const member = await guild.members.fetch(user.id).catch(() => null);
-        if (!member) continue;
-
-        await member.timeout(timeoutDuration, reason);
-
-        let userData = await getUser(user.id, guildID);
-        let timeouts = userData?.timeouts || [];
-
-        timeouts.push({
-          reason,
-          duration: timeoutDuration,
-          by: interaction.user.id,
-          createdAt: Date.now(),
+      if (!member) {
+        return await interaction.editReply({
+          content: "User not found in this server",
+          ephemeral: true,
         });
+      }
 
-        if (!userData) {
-          await createUser(user.id, guildID, { timeouts });
-        } else {
-          await updateUserLogs(user.id, guildID, "timeouts", timeouts);
-        }
+      await member.timeout(timeoutDuration, reason);
+
+      let userData = await getUser(user.id, guild.id);
+      let timeouts = userData?.timeouts || [];
+
+      timeouts.push({
+        reason,
+        duration: timeoutDuration,
+        by: interaction.user.id,
+        createdAt: Date.now(),
+      });
+
+      if (!userData) {
+        await createUser(user.id, guild.id, { timeouts });
+      } else {
+        await updateUserLogs(user.id, guild.id, "timeouts", timeouts);
       }
 
       await interaction.editReply(`Timed out <@${user.id}>`);
