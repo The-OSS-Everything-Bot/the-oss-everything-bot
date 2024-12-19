@@ -8,9 +8,11 @@ export default {
     .setContexts([0, 1, 2]),
 
   async execute(interaction) {
-    const start = Date.now();
     await interaction.deferReply();
-    const ping = Date.now() - start;
-    await interaction.editReply(`Pong! \`${ping}ms\``);
+
+    const reply = await interaction.fetchReply();
+    const ping = reply.createdTimestamp - interaction.createdTimestamp;
+
+    interaction.editReply(`Pong! \`${ping}ms\``);
   },
 };
