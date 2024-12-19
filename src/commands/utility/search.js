@@ -57,22 +57,25 @@ export default {
           .setColor(0x5865f2);
       };
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("prev")
-          .setLabel("◀")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId("next")
-          .setLabel("▶")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(pages <= 1)
-      );
+      const getRow = (page) => {
+        return new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("prev")
+            .setLabel("◀")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(page === 0),
+          new ButtonBuilder()
+            .setCustomId("next")
+            .setLabel("▶")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(page === pages - 1)
+        );
+      };
 
       const message = await interaction.editReply({
         embeds: [getEmbed(currentPage)],
-        components: [row],
+        components: [getRow(currentPage)],
+        fetchReply: true,
       });
 
       const collector = message.createMessageComponentCollector({
@@ -81,34 +84,49 @@ export default {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== interaction.user.id) {
-          return i.reply({
+          await i.reply({
             content: "Only the command user can navigate pages",
             ephemeral: true,
           });
+          return;
         }
 
-        if (i.customId === "prev" && currentPage > 0) {
-          currentPage--;
-        } else if (i.customId === "next" && currentPage < pages - 1) {
-          currentPage++;
-        }
+        currentPage =
+          i.customId === "prev"
+            ? Math.max(0, currentPage - 1)
+            : Math.min(pages - 1, currentPage + 1);
 
-        row.components[0].setDisabled(currentPage === 0);
-        row.components[1].setDisabled(currentPage === pages - 1);
-
-        await i.update({
+        await interaction.editReply({
           embeds: [getEmbed(currentPage)],
-          components: [row],
+          components: [getRow(currentPage)],
         });
+
+        await i.deferUpdate().catch(() => null);
       });
 
       collector.on("end", () => {
-        row.components.forEach((button) => button.setDisabled(true));
-        message.edit({ components: [row] });
+        if (!message.editable) return;
+
+        const disabledRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("prev")
+            .setLabel("◀")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId("next")
+            .setLabel("▶")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true)
+        );
+
+        interaction.editReply({ components: [disabledRow] }).catch(() => null);
       });
     } catch (error) {
-      console.error(error);
-      await interaction.editReply("An error occurred while searching");
+      console.error("Search error:", error);
+      await interaction
+        .editReply("An error occurred while searching")
+        .catch(() => null);
     }
   },
 };
