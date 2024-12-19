@@ -60,6 +60,7 @@ The original idea for this bot is that no bot does what we want, and since they 
 - Tickets (commands)
 - Status Monitoring (commands)
 - Jail (commands)
+- Web Search (utility)
 
 ### Features in Progress
 
@@ -87,7 +88,6 @@ The original idea for this bot is that no bot does what we want, and since they 
 - Youtube Notifications
 - GPT API
 - Search Image
-- Search Whoogle/Google/Duckduckgo/Duckduckno
 - advanced logging
 - libsql database (one per server)
 - redis (main bot)
