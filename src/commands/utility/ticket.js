@@ -10,8 +10,6 @@ export default {
   data: new SlashCommandBuilder()
     .setName("ticket")
     .setDescription("Setups a ticket system")
-    .setIntegrationTypes([0])
-    .setContexts([0])
     .addChannelOption((option) =>
       option
         .setName("channel")
@@ -33,10 +31,11 @@ export default {
         !interaction.member.permissions.has([
           PermissionFlagsBits.ManageChannels,
         ])
-      )
+      ) {
         return await interaction.editReply({
           content: "You don't have permission to use this command",
         });
+      }
 
       const channel = interaction.options.getChannel("channel");
       const category = interaction.options.getChannel("category");
@@ -67,15 +66,15 @@ export default {
       });
 
       await interaction.editReply({
-        content: "Ticket channel setuped successfully",
+        content: "Ticket channel setup successfully",
         ephemeral: true,
       });
     } catch (err) {
+      console.error(`[Error] ${err}`);
       await interaction.editReply({
         content: "Something went wrong",
         ephemeral: true,
       });
-      console.log(`[Error] ${err}`);
     }
   },
 };

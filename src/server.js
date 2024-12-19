@@ -7,7 +7,7 @@ import bodyParser from "body-parser";
 import { createClient } from 'redis';
 import { createClient as createLibSQL } from '@libsql/client';
 import path from 'path';
-import getAllFiles from "./src/utils/getAllFiles.js";
+import getAllFiles from "./utils/getAllFiles.js";
 
 env.config();
 
@@ -27,21 +27,17 @@ const initDatabases = async () => {
     });
 
     try {
-      const migrationFiles =  getAllFiles(path.join('./', 'migrations')).map(migration => readFileSync(migration).toString());
+      const migrationSQL = getAllFiles(path.join('./', 'migrations')).map(migration => readFileSync(migration, 'utf8').toString());
       
-      for (const migration of migrationFiles) {
-        try {
-          await libsql.execute(migration);
-        } catch (error) {
-          console.warn('[Warn] Migration failed:', error);
-        }
+      for (const migration of migrationSQL) {
+        await libsql.execute(migration);
       }
       console.log('[Info] LibSQL migrations completed');
     } catch (migrationError) {
       console.warn('[Warn] Migration may have already been applied:', migrationError.message);
     }
 
-    return { libsql };
+    return { redis, libsql };
   } catch (error) {
     console.error('[Error] Database initialization failed:', error);
     process.exit(1);
@@ -92,24 +88,4 @@ process.on('unhandledRejection', error => {
   console.error('Unhandled promise rejection:', error);
 });
 
-env.config();
-
-// Create a new client instance
-const client = new Client({
-  intents: [
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildPresences,
-    GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.GuildModeration,
-  ],
-});
-
 startServer();
-
-eventHandler(client);
-
-client.login(process.env.BOT_TOKEN);
