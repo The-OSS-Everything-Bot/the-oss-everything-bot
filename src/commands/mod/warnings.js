@@ -1,5 +1,5 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import userModel from "../../schemas/user.js";
+import { getUser } from "../../schemas/user.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -16,8 +16,7 @@ export default {
 
   async execute(interaction) {
     const user = interaction.options.getUser("user");
-
-    const userData = await userModel.findOne({ id: user.id }).exec();
+    const userData = await getUser(user.id);
 
     if (!userData) {
       return await interaction.reply({

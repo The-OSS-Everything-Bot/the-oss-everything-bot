@@ -18,6 +18,8 @@
   "author": "Omar Saad",
   "license": "ISC",
   "dependencies": {
+    "@libsql/client": "^0.5.6",
+    "redis": "^4.6.13",
     "body-parser": "^1.20.3",
     "discord.js": "^14.16.2",
     "dotenv": "^16.4.5",
