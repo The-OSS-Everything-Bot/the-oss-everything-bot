@@ -81,6 +81,7 @@ The original idea for this bot is that no bot does what we want, and since they 
 ### Desired Features
 
 - Modmail
+- status/vanity repping Monitoring and reward(s)
 - Endpoint user
 - Advanced Verification
 - Advanced Whitelist
