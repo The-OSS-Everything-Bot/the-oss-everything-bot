@@ -26,28 +26,32 @@ export default {
     try {
       const user = interaction.options.getMember("user");
 
-      for (const guildID of process.env.GUILDS.split(",")) {
-        const guild = await interaction.client.guilds.cache.get(guildID);
-        const member = await guild.members.fetch(user.id);
+      const guild = interaction.guild;
+      const member = await guild.members.fetch(user.id);
 
-        if (!member) continue;
-        await member.timeout(null);
-
-        let userData = await getUser(user.id, guildID);
-        let timeouts = userData?.timeouts || [];
-
-        timeouts.push({
-          reason: "Timeout removed",
-          by: interaction.user.id,
-          createdAt: Date.now(),
-          type: "untimeout",
+      if (!member) {
+        return await interaction.reply({
+          content: "User not found in this server",
+          ephemeral: true,
         });
+      }
 
-        if (!userData) {
-          await createUser(user.id, guildID, { timeouts });
-        } else {
-          await updateUserLogs(user.id, guildID, "timeouts", timeouts);
-        }
+      await member.timeout(null);
+
+      let userData = await getUser(user.id, guild.id);
+      let timeouts = userData?.timeouts || [];
+
+      timeouts.push({
+        reason: "Timeout removed",
+        by: interaction.user.id,
+        createdAt: Date.now(),
+        type: "untimeout",
+      });
+
+      if (!userData) {
+        await createUser(user.id, guild.id, { timeouts });
+      } else {
+        await updateUserLogs(user.id, guild.id, "timeouts", timeouts);
       }
 
       await interaction.reply(`Removed timeout from <@${user.id}>`);

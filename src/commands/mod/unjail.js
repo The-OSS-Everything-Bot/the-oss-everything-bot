@@ -24,12 +24,23 @@ export default {
       });
 
     try {
-      const user = interaction.options.getMember("user");
-      let userData = await getUser(user.id, interaction.guildId);
+      const targetUser = interaction.options.getUser("user");
+      let userData = await getUser(targetUser.id, interaction.guildId);
 
       if (!userData?.jails?.length) {
         return await interaction.reply({
           content: "This user is not jailed",
+          ephemeral: true,
+        });
+      }
+
+      const member = await interaction.guild.members
+        .fetch(targetUser.id)
+        .catch(() => null);
+
+      if (!member) {
+        return await interaction.reply({
+          content: "User not found in this server",
           ephemeral: true,
         });
       }
@@ -45,12 +56,12 @@ export default {
         });
       }
 
-      await user.roles.remove(jailRole);
+      await member.roles.remove(jailRole);
       const lastJail = userData.jails[userData.jails.length - 1];
 
       if (lastJail.removedRoles) {
         for (const roleId of lastJail.removedRoles) {
-          await user.roles.add(roleId);
+          await member.roles.add(roleId).catch(() => null);
         }
       }
 
@@ -62,8 +73,8 @@ export default {
         type: "unjail",
       });
 
-      await updateUserLogs(user.id, interaction.guildId, "jails", jails);
-      await interaction.reply(`Unjailed <@${user.id}>`);
+      await updateUserLogs(targetUser.id, interaction.guildId, "jails", jails);
+      await interaction.reply(`Unjailed <@${targetUser.id}>`);
     } catch (error) {
       console.error(error);
       await interaction.reply({

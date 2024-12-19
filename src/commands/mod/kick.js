@@ -31,27 +31,25 @@ export default {
     const reason = interaction.options.getString("reason") || "Not provided";
 
     try {
-      for (const guildID of process.env.GUILDS.split(",")) {
-        const guild = await interaction.client.guilds.cache.get(guildID);
-        await guild.members.kick(user, reason);
+      const guild = interaction.guild;
+      await guild.members.kick(user, reason);
 
-        let userData = await getUser(user.id, guildID);
-        let kicks = userData?.kicks || [];
+      let userData = await getUser(user.id, guild.id);
+      let kicks = userData?.kicks || [];
 
-        kicks.push({
-          reason,
-          by: interaction.user.id,
-          createdAt: Date.now(),
-        });
+      kicks.push({
+        reason,
+        by: interaction.user.id,
+        createdAt: Date.now(),
+      });
 
-        if (!userData) {
-          await createUser(user.id, guildID, { kicks });
-        } else {
-          await updateUserLogs(user.id, guildID, "kicks", kicks);
-        }
+      if (!userData) {
+        await createUser(user.id, guild.id, { kicks });
+      } else {
+        await updateUserLogs(user.id, guild.id, "kicks", kicks);
       }
 
-      await interaction.reply(`Kicked ${user.tag}`);
+      await interaction.reply(`Kicked <@${user.id}>`);
     } catch (error) {
       console.error(error);
       await interaction.reply({
