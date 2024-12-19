@@ -1,15 +1,15 @@
 export default async (client, guildId) => {
-    let commands = [];
+  let commands = [];
 
-    // console.log(client)
-    if (guildId) {
-        const guild = await client.guilds.fetch(guildId);
-        commands = guild.commands;
-    } else {
-        commands = await client.application.commands;
-    }
+  // console.log(client)
+  if (guildId) {
+    const guild = await client.guilds.fetch(guildId);
+    commands = guild.commands;
+  } else {
+    commands = await client.application.commands;
+  }
 
-    await commands.fetch()
-    
-    return commands;
-}
+  await commands.fetch();
+
+  return commands;
+};

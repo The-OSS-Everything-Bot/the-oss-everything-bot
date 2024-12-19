@@ -18,9 +18,7 @@ export default {
         .setMinLength(1)
     )
     .setIntegrationTypes([0, 1])
-    .setContexts([0, 1, 2])
-    ,
-
+    .setContexts([0, 1, 2]),
   async execute(interaction) {
     await interaction.reply({
       embeds: [

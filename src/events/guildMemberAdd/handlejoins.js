@@ -14,10 +14,10 @@ export default async (client, member) => {
         title: "New Member",
         description: `Welcome ${member.user.tag} to ${member.guild.name}!`,
         footer: {
-            icon_url: member.guild.iconURL(),
-            text: member.guild.name
-        }
-    }),
+          icon_url: member.guild.iconURL(),
+          text: member.guild.name,
+        },
+      }),
     ],
   });
 };

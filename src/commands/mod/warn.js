@@ -55,7 +55,7 @@ export default {
         content: `Warned ${interaction.options.getUser("user")}`,
       });
     } catch (error) {
-      console.log('\x1b[31m', `[Error] ${error} at warn.js`);
+      console.log("\x1b[31m", `[Error] ${error} at warn.js`);
     }
   },
 };
