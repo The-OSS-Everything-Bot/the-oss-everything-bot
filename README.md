@@ -59,6 +59,7 @@ The original idea for this bot is that no bot does what we want, and since they 
 
 - Tickets (commands)
 - Status Monitoring (commands)
+- Jail (commands)
 
 ### Features in Progress
 
@@ -94,7 +95,6 @@ The original idea for this bot is that no bot does what we want, and since they 
 - mongodb (main bot)
 - postgresql (for custom bots)
 - quarintine
-- jail
 
 #### Languages Used
 
