@@ -38,7 +38,7 @@ export default {
       });
 
     try {
-      const user = interaction.options.getMember("user");
+      const user = interaction.options.getUser("user");
       const reason = interaction.options.getString("reason") || "Not provided";
       let duration = interaction.options.getString("duration");
 
@@ -48,35 +48,41 @@ export default {
         .replace("m", " * 60 * 1000")
         .replace("s", " * 1000");
 
-      for (const guildID of process.env.GUILDS.split(",")) {
-        const guild = await interaction.client.guilds.cache.get(guildID);
-        const member = await guild.members.fetch(user);
+      const timeoutDuration = eval(duration);
 
-        if (!member) continue;
-        await member.timeout(eval(duration), reason);
+      const guild = interaction.guild;
+      const member = await guild.members.fetch(user.id).catch(() => null);
 
-        let userData = await getUser(user.id, guildID);
-        let timeouts = userData?.timeouts || [];
-
-        timeouts.push({
-          reason,
-          duration: eval(duration),
-          by: interaction.user.id,
-          createdAt: Date.now(),
+      if (!member) {
+        return await interaction.editReply({
+          content: "User not found in this server",
+          ephemeral: true,
         });
+      }
 
-        if (!userData) {
-          await createUser(user.id, guildID, { timeouts });
-        } else {
-          await updateUserLogs(user.id, guildID, "timeouts", timeouts);
-        }
+      await member.timeout(timeoutDuration, reason);
+
+      let userData = await getUser(user.id, guild.id);
+      let timeouts = userData?.timeouts || [];
+
+      timeouts.push({
+        reason,
+        duration: timeoutDuration,
+        by: interaction.user.id,
+        createdAt: Date.now(),
+      });
+
+      if (!userData) {
+        await createUser(user.id, guild.id, { timeouts });
+      } else {
+        await updateUserLogs(user.id, guild.id, "timeouts", timeouts);
       }
 
       await interaction.editReply(`Timed out <@${user.id}>`);
     } catch (err) {
       console.error("\u001b[31m", `[Error] ${err} at timeout.js`);
       await interaction.editReply({
-        content: "An error occurred",
+        content: "An error occurred while timing out the user",
         ephemeral: true,
       });
     }

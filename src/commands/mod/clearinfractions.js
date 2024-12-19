@@ -26,15 +26,18 @@ export default {
     const user = interaction.options.getUser("user");
 
     try {
-      for (const guildID of process.env.GUILDS.split(",")) {
-        const userData = await getUser(user.id, guildID);
-        if (!userData) continue;
+      const userData = await getUser(user.id, interaction.guildId);
+      if (!userData) {
+        return await interaction.reply({
+          content: "No infractions found for this user",
+          ephemeral: true,
+        });
+      }
 
-        const actions = ["warns", "bans", "kicks", "timeouts", "jails"];
-        for (const action of actions) {
-          if (userData[action]?.length) {
-            await updateUserLogs(user.id, guildID, action, []);
-          }
+      const actions = ["warns", "bans", "kicks", "timeouts", "jails"];
+      for (const action of actions) {
+        if (userData[action]?.length) {
+          await updateUserLogs(user.id, interaction.guildId, action, []);
         }
       }
 
