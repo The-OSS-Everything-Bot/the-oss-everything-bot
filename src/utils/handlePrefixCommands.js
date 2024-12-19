@@ -19,19 +19,19 @@ export default async (client, message) => {
     if (!options) return "";
 
     const requiredOptions = options
-      .filter(opt => opt.required)
-      .map(opt => `<${opt.name}>`)
+      .filter((opt) => opt.required)
+      .map((opt) => `<${opt.name}>`)
       .join(" ");
-      
+
     const optionalOptions = options
-      .filter(opt => !opt.required)
-      .map(opt => `[${opt.name}]`)
+      .filter((opt) => !opt.required)
+      .map((opt) => `[${opt.name}]`)
       .join(" ");
 
     return `${prefix}${cmd.data.name} ${requiredOptions} ${optionalOptions}`.trim();
   };
 
-  if (args.length === 0 && command.data.options?.some(opt => opt.required)) {
+  if (args.length === 0 && command.data.options?.some((opt) => opt.required)) {
     const usage = getCommandUsage(command);
     return message.reply(`Usage: ${usage}`);
   }
