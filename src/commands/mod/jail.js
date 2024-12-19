@@ -46,15 +46,26 @@ export default {
       });
 
     try {
-      const user = interaction.options.getUser("user");
+      const targetUser = interaction.options.getUser("user");
       const reason = interaction.options.getString("reason") || "Not provided";
       const duration = interaction.options.getString("duration");
       const jailChannel = interaction.options.getChannel("channel");
       const parentCategory = jailChannel.parent;
 
-      if (user.roles.cache.some((role) => role.name === "Jailed")) {
+      const member = await interaction.guild.members
+        .fetch(targetUser.id)
+        .catch(() => null);
+
+      if (!member) {
         return await interaction.reply({
-          content: `Unable to jail ${user} as they are currently jailed`,
+          content: "User not found in this server",
+          ephemeral: true,
+        });
+      }
+
+      if (member.roles.cache.some((role) => role.name === "Jailed")) {
+        return await interaction.reply({
+          content: `Unable to jail ${member} as they are currently jailed`,
           ephemeral: true,
         });
       }
@@ -71,17 +82,17 @@ export default {
         });
       }
 
-      const userRoles = user.roles.cache.filter(
+      const userRoles = member.roles.cache.filter(
         (role) => role.id !== interaction.guild.id
       );
       const removedRoles = [];
 
       for (const [id, role] of userRoles) {
         removedRoles.push(role.id);
-        await user.roles.remove(role);
+        await member.roles.remove(role);
       }
 
-      await user.roles.add(jailRole);
+      await member.roles.add(jailRole);
 
       for (const [id, channel] of interaction.guild.channels.cache) {
         if (channel.id === jailChannel.id) {
@@ -90,7 +101,7 @@ export default {
             SendMessages: true,
             ReadMessageHistory: true,
           });
-        } else if (channel.id === parentCategory.id) {
+        } else if (channel.id === parentCategory?.id) {
           await channel.permissionOverwrites.create(jailRole, {
             ViewChannel: true,
           });
@@ -101,7 +112,7 @@ export default {
         }
       }
 
-      let userData = await getUser(user.id, interaction.guildId);
+      let userData = await getUser(targetUser.id, interaction.guildId);
       let jails = userData?.jails || [];
 
       jails.push({
@@ -113,12 +124,17 @@ export default {
       });
 
       if (!userData) {
-        await createUser(user.id, interaction.guildId, { jails });
+        await createUser(targetUser.id, interaction.guildId, { jails });
       } else {
-        await updateUserLogs(user.id, interaction.guildId, "jails", jails);
+        await updateUserLogs(
+          targetUser.id,
+          interaction.guildId,
+          "jails",
+          jails
+        );
       }
 
-      await interaction.reply(`Jailed ${user}`);
+      await interaction.reply(`Jailed ${member}`);
 
       if (duration) {
         const time = duration
@@ -128,9 +144,14 @@ export default {
           .replace("s", " * 1000");
 
         setTimeout(async () => {
-          await user.roles.remove(jailRole);
-          for (const roleId of removedRoles) {
-            await user.roles.add(roleId);
+          const currentMember = await interaction.guild.members
+            .fetch(targetUser.id)
+            .catch(() => null);
+          if (currentMember) {
+            await currentMember.roles.remove(jailRole);
+            for (const roleId of removedRoles) {
+              await currentMember.roles.add(roleId).catch(() => null);
+            }
           }
         }, eval(time));
       }
