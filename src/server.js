@@ -30,6 +30,7 @@ const initDatabases = async () => {
         "./migrations/001_create_users.sql",
         "./migrations/002_create_guild_settings.sql",
         "./migrations/003_create_tickets.sql",
+        "./migrations/004_create_role_persistence.sql",
       ];
 
       for (const migration of migrations) {

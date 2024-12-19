@@ -4,6 +4,7 @@ import {
   EmbedBuilder,
 } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
+import { saveUserRoles } from "../../utils/dbManager.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -91,6 +92,8 @@ export default {
         removedRoles.push(role.id);
         await member.roles.remove(role);
       }
+
+      await saveUserRoles(member.id, interaction.guildId, removedRoles);
 
       await member.roles.add(jailRole);
 
