@@ -1,28 +1,45 @@
-import mongoose from "mongoose";
+export async function getUser(userId) {
+  const cachedUser = await global.redis.get(`user:${userId}`);
+  if (cachedUser) {
+    return JSON.parse(cachedUser);
+  }
 
-const Schema = mongoose.Schema;
+  const result = await global.libsql.execute({
+    sql: "SELECT * FROM users WHERE id = ?",
+    args: [userId],
+  });
 
-const UserSchema = new Schema({
-  id: String,
-  warns: {
-    type: [],
+  if (result.rows.length === 0) {
+    return null;
+  }
 
-    reason: {
-      type: String,
-      required: true,
-    },
-    by: {
-      type: String,
-      required: true,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-      required: true,
-    },
+  const user = result.rows[0];
+  await global.redis.set(`user:${userId}`, JSON.stringify(user), "EX", 3600);
+  return user;
+}
 
-    required: true,
-  },
-});
+export async function createUser(userId, warns = []) {
+  const user = {
+    id: userId,
+    warns,
+  };
 
-export default mongoose.model("User", UserSchema);
+  await global.libsql.execute({
+    sql: "INSERT INTO users (id, warns) VALUES (?, ?)",
+    args: [userId, JSON.stringify(warns)],
+  });
+
+  await global.redis.set(`user:${userId}`, JSON.stringify(user), "EX", 3600);
+  return user;
+}
+
+export async function updateUserWarns(userId, warns) {
+  await global.libsql.execute({
+    sql: "UPDATE users SET warns = ? WHERE id = ?",
+    args: [JSON.stringify(warns), userId],
+  });
+
+  const user = { id: userId, warns };
+  await global.redis.set(`user:${userId}`, JSON.stringify(user), "EX", 3600);
+  return user;
+}

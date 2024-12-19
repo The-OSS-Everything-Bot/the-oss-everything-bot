@@ -1,5 +1,5 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import userModel from "../../schemas/user.js";
+import { getUser, createUser, updateUserWarns } from "../../schemas/user.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -29,9 +29,7 @@ export default {
 
     try {
       const user = interaction.options.getUser("user");
-
-      const userData = await userModel.findOne({ id: user.id }).exec();
-
+      let userData = await getUser(user.id);
       let warns = userData?.warns || [];
 
       warns.push({
@@ -41,14 +39,9 @@ export default {
       });
 
       if (!userData) {
-        await userModel.create({
-          id: user.id,
-          warns,
-        });
+        await createUser(user.id, warns);
       } else {
-        await userData.updateOne({
-          warns,
-        });
+        await updateUserWarns(user.id, warns);
       }
 
       interaction.reply({
