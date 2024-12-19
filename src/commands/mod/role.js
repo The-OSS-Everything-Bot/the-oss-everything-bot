@@ -152,6 +152,7 @@ export default {
       switch (command) {
         case "give":
 <<<<<<< HEAD
+<<<<<<< HEAD
           await interaction.guild.members.cache
             .find((member) => member.id === user.id)
             .roles.add(role.id);
@@ -161,10 +162,15 @@ export default {
             .find((member) => member.id === user.id)
             .roles.remove(role.id);
 =======
+=======
+>>>>>>> 7d2d2f4 (role managment)
           await interaction.guild.members.cache.find((member) => member.id === user.id).roles.add(role.id);
           break;
         case "remove":
           await interaction.guild.members.cache.find((member) => member.id === user.id).roles.remove(role.id);
+<<<<<<< HEAD
+>>>>>>> 7d2d2f4 (role managment)
+=======
 >>>>>>> 7d2d2f4 (role managment)
           break;
         case "create":
@@ -177,6 +183,7 @@ export default {
           await interaction.guild.roles.delete(role.id);
           break;
         case "rename":
+<<<<<<< HEAD
 <<<<<<< HEAD
           await interaction.guild.roles.cache
             .find((r) => r.id === role.id)
@@ -192,6 +199,8 @@ export default {
             .find((r) => r.id === role.id)
             .edit({ icon: icon.url });
 =======
+=======
+>>>>>>> 7d2d2f4 (role managment)
           await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({name: name});
           break;
         case "color":
@@ -199,6 +208,9 @@ export default {
           break;
         case "icon":
           await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({icon: icon.url});
+<<<<<<< HEAD
+>>>>>>> 7d2d2f4 (role managment)
+=======
 >>>>>>> 7d2d2f4 (role managment)
           break;
       }
@@ -207,6 +219,10 @@ export default {
         content: `${command} operation successfully`,
       });
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7d2d2f4 (role managment)
 =======
 
 >>>>>>> 7d2d2f4 (role managment)
