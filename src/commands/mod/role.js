@@ -151,6 +151,7 @@ export default {
     try {
       switch (command) {
         case "give":
+<<<<<<< HEAD
           await interaction.guild.members.cache
             .find((member) => member.id === user.id)
             .roles.add(role.id);
@@ -159,6 +160,12 @@ export default {
           await interaction.guild.members.cache
             .find((member) => member.id === user.id)
             .roles.remove(role.id);
+=======
+          await interaction.guild.members.cache.find((member) => member.id === user.id).roles.add(role.id);
+          break;
+        case "remove":
+          await interaction.guild.members.cache.find((member) => member.id === user.id).roles.remove(role.id);
+>>>>>>> 7d2d2f4 (role managment)
           break;
         case "create":
           await interaction.guild.roles.create({
@@ -170,6 +177,7 @@ export default {
           await interaction.guild.roles.delete(role.id);
           break;
         case "rename":
+<<<<<<< HEAD
           await interaction.guild.roles.cache
             .find((r) => r.id === role.id)
             .edit({ name: name });
@@ -183,12 +191,25 @@ export default {
           await interaction.guild.roles.cache
             .find((r) => r.id === role.id)
             .edit({ icon: icon.url });
+=======
+          await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({name: name});
+          break;
+        case "color":
+          await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({color: color});
+          break;
+        case "icon":
+          await interaction.guild.roles.cache.find((r) => r.id === role.id).edit({icon: icon.url});
+>>>>>>> 7d2d2f4 (role managment)
           break;
       }
 
       await interaction.editReply({
         content: `${command} operation successfully`,
       });
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7d2d2f4 (role managment)
     } catch (error) {
       console.log(`[error] ${error}`);
       await interaction.editReply({

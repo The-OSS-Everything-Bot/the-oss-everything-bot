@@ -90,4 +90,38 @@ process.on('unhandledRejection', error => {
   console.error('Unhandled promise rejection:', error);
 });
 
-startServer();
+env.config();
+
+// Create a new client instance
+const client = new Client({
+  intents: [
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildModeration,
+  ],
+});
+
+// connect to DB
+//#(async () => {
+//  mongoose.set("strictQuery", false);
+//  await mongoose.connect(process.env.MONGO_URI);
+//
+//  console.log("[Info] Connected to MongoDB");
+//})();
+
+// checks if settings.json exists
+try {
+  readFileSync("./settings.json");
+  // eslint-disable-next-line no-unused-vars
+} catch (err) {
+  writeFileSync("./settings.json", "{}");
+}
+
+eventHandler(client);
+
+client.login(process.env.BOT_TOKEN);
