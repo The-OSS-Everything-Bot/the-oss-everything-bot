@@ -108,7 +108,12 @@ The original idea for this bot is that no bot does what we want, and since they 
 - Rust
 - libsql
 
-# awfixer-security-bot-dashboard
+## Reasoning for databases
+
+We plan on using libsql as well as our other databases to provide a rapid connection for servers of any size, as libsql has an option to give users individual sql databases, which will allow all information on the
+user to be stored in the database, seperate from other users, and only active and in use when the user triggers a need for the database, all other information will be stored in redis, or another database
+
+# [Dashboard](https://github.com/the-oss-everything-bot/dashboard)
 
 ## current features
 
@@ -129,7 +134,7 @@ The original idea for this bot is that no bot does what we want, and since they 
 - All the features
 - dark and light mod toggles for the global dom
 
-# awfixer-security-bot-api
+# [api](https://github.com/the-oss-everything-bot/api)
 
 ## Current Features
 
@@ -138,8 +143,17 @@ The original idea for this bot is that no bot does what we want, and since they 
 ## Features in Progress
 
 - Stripe Interactions
+- RSS
+- Ghost Integrations
+- Git integrations
+  - github
+  - gitlab
+  - gitea
+  - forgejo
+  - codeberg
+  - etc
 
-##https://github.com/The-OSS-Everything-Bot/the-oss-everythig-bot Desired Features
+## Desired Features
 
 - OpenAPI compatiblity with other applications
 
