@@ -27,7 +27,9 @@ export const createCommandInteraction = (message, args) => ({
       }
       if (name === "reason") {
         const mentionIndex = args.findIndex((arg) => arg.startsWith("<@"));
-        return args.slice(mentionIndex + 1).join(" ") || null;
+        const durationIndex = args.findIndex((arg) => /^\d+[dhms]$/.test(arg));
+        const startIndex = Math.max(mentionIndex, durationIndex) + 1;
+        return args.slice(startIndex).join(" ") || null;
       }
       return null;
     },
