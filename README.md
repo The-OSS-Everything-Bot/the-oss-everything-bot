@@ -34,9 +34,7 @@
 
 ## About
 
-Tux is an all in one Discord bot for the All Things Linux Discord server.
-
-It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
+The original idea for this bot is that no bot does what we want, and since they are close souce, so we are making on that does what we want, and is oss, so that anyone can help and contribute
 
 
 **<h3 align="left">Connect with me:</h3>** 
