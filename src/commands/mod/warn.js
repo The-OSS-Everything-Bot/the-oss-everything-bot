@@ -29,7 +29,8 @@ export default {
 
     try {
       const user = interaction.options.getUser("user");
-      let userData = await getUser(user.id);
+      const guildId = interaction.guildId;
+      let userData = await getUser(user.id, guildId);
       let warns = userData?.warns || [];
 
       warns.push({
@@ -39,9 +40,9 @@ export default {
       });
 
       if (!userData) {
-        await createUser(user.id, warns);
+        await createUser(user.id, guildId, warns);
       } else {
-        await updateUserWarns(user.id, warns);
+        await updateUserWarns(user.id, guildId, warns);
       }
 
       interaction.reply({

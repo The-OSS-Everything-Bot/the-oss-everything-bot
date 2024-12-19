@@ -84,6 +84,7 @@ ipython_config.py
 
 # databases
 local.db
+guilds
 
 .env
 node_modules
