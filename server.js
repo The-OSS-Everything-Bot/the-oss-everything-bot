@@ -13,12 +13,12 @@ env.config();
 
 const initDatabases = async () => {
   try {
-    // const redis = createClient({
-    //   url: process.env.REDIS_URL || 'redis://localhost:6379'
-    // });
+    const redis = createClient({
+      url: process.env.REDIS_URL || 'redis://localhost:6379'
+    });
 
-    // await redis.connect();
-    // console.log('[Info] Connected to Redis');
+    await redis.connect();
+    console.log('[Info] Connected to Redis');
 
     const dbPath = path.join(process.cwd(), 'local.db');
     const libsql = createLibSQL({
@@ -58,8 +58,8 @@ app.post("/webhook", (req, res) => {
 
 const startServer = async () => {
   try {
-    const { libsql } = await initDatabases();
-    // global.redis = redis;
+    const { redis, libsql } = await initDatabases();
+    global.redis = redis;
     global.libsql = libsql;
 
     app.listen(3000, () => {
@@ -108,21 +108,7 @@ const client = new Client({
   ],
 });
 
-// connect to DB
-//#(async () => {
-//  mongoose.set("strictQuery", false);
-//  await mongoose.connect(process.env.MONGO_URI);
-//
-//  console.log("[Info] Connected to MongoDB");
-//})();
-
-// checks if settings.json exists
-try {
-  readFileSync("./settings.json");
-  // eslint-disable-next-line no-unused-vars
-} catch (err) {
-  writeFileSync("./settings.json", "{}");
-}
+startServer();
 
 eventHandler(client);
 
