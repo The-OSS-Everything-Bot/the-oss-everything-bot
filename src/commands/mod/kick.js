@@ -51,7 +51,7 @@ export default {
         }
       }
 
-      await interaction.reply(`Kicked ${user.tag}`);
+      await interaction.reply(`Kicked <@${user.id}>`);
     } catch (error) {
       console.error(error);
       await interaction.reply({

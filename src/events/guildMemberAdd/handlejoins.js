@@ -1,23 +1,27 @@
 import { EmbedBuilder } from "discord.js";
+import { getGuildSettings } from "../../utils/dbManager.js";
 
 export default async (client, member) => {
-  // if(member.user.bot) return;
+  try {
+    const settings = await getGuildSettings(member.guild.id);
+    if (!settings?.welcome_channel_id) return;
 
-  console.log(member.user.tag);
-  const channel =
-    member.guild.channels.cache.get("1061712782191509516") ||
-    (await member.guild.channels.fetch("1061712782191509516"));
+    const channel = await client.channels.fetch(settings.welcome_channel_id);
+    if (!channel) return;
 
-  channel.send({
-    embeds: [
-      new EmbedBuilder({
-        title: "New Member",
-        description: `Welcome ${member.user.tag} to ${member.guild.name}!`,
-        footer: {
-          icon_url: member.guild.iconURL(),
-          text: member.guild.name,
-        },
-      }),
-    ],
-  });
+    const embed = new EmbedBuilder()
+      .setTitle("New Member")
+      .setDescription(`Welcome ${member.user.tag} to ${member.guild.name}!`)
+      .setColor(0x57f287)
+      .setTimestamp()
+      .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+      .setFooter({
+        text: member.guild.name,
+        iconURL: member.guild.iconURL(),
+      });
+
+    await channel.send({ embeds: [embed] });
+  } catch (error) {
+    console.error("[Error] Welcome message failed:", error);
+  }
 };
