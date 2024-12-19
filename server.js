@@ -2,7 +2,23 @@ import { Client, GatewayIntentBits } from "discord.js";
 import env from "dotenv";
 import eventHandler from "./src/handlers/eventHandler.js";
 import { readFileSync, writeFileSync } from "fs";
+
+import express from "express";
+import bodyParser from "body-parser";
+
 // import mongoose from "mongoose";
+
+const app = express();
+app.use(bodyParser.json());
+
+app.post("/webhook", (req, res) => {
+  req.body["type"] == 0;
+  return res.status(204).send();
+});
+
+app.listen(3000, () => {
+  console.log("[Info] express Server is running on port 3000!");
+});
 
 env.config();
 
@@ -13,7 +29,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildVoiceStates
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
@@ -28,7 +44,7 @@ const client = new Client({
 // checks if settings.json exists
 try {
   readFileSync("./settings.json");
-// eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   writeFileSync("./settings.json", "{}");
 }

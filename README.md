@@ -32,6 +32,7 @@
 # Main Bot
 
 ## Current Features
+
 - Tickets (commands)
 - Status Monitoring (commands)
 
