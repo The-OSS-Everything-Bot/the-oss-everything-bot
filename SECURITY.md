@@ -12,3 +12,4 @@ We are excepting vuln reports on all versions
 ## Reporting a Vulnerability
 
 Report the Vuln by opening a ticket on our [Discord](https://discord.gg/awfixer)
+
