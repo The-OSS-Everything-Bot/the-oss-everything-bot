@@ -1,5 +1,5 @@
 import { ChannelType, EmbedBuilder, PermissionsBitField } from "discord.js";
-import { readFileSync } from "fs";
+import { getGuildTicket } from "../../schemas/guild.js";
 
 export default async (client, interaction) => {
   if (!interaction.isButton()) return;
@@ -10,11 +10,8 @@ export default async (client, interaction) => {
     switch (interaction.customId) {
       // new ticket
       case "new ticket":
-        const category = JSON.parse(readFileSync("./settings.json"))["tickets"][
-          interaction.guild.id
-        ].category;
-
-        console.log(category);
+        let category = await getGuildTicket(interaction.guild.id, interaction.channel.id);
+        category = category["category"];
 
         const channel = await interaction.guild.channels.create({
           name: `ticket-${interaction.user.id}`,

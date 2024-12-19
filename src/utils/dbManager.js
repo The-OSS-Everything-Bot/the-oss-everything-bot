@@ -33,19 +33,54 @@ export async function getGuildDB(guildId) {
 
 async function migrateDB(db) {
   try {
-    const columns = await db.execute("PRAGMA table_info(users)");
-    const existingColumns = new Set(columns.rows.map((row) => row.name));
+    await db.batch([
+      `CREATE TABLE IF NOT EXISTS users (
+        id TEXT,
+        guild_id TEXT,
+        warns TEXT NOT NULL DEFAULT '[]',
+        bans TEXT NOT NULL DEFAULT '[]',
+        kicks TEXT NOT NULL DEFAULT '[]',
+        timeouts TEXT NOT NULL DEFAULT '[]',
+        jails TEXT NOT NULL DEFAULT '[]',
+        PRIMARY KEY (id, guild_id)
+      )`,
+      `CREATE TABLE IF NOT EXISTS tickets (
+        channel TEXT NOT NULL PRIMARY KEY,
+        category TEXT NOT NULL
+      )`,
+    ]);
 
-    const requiredColumns = {
+    const [{ rows: usersColumns }, { rows: ticketsColumns }] = await db.batch([
+      "PRAGMA table_info(users)",
+      "PRAGMA table_info(tickets)",
+    ]);
+
+    const existingUsersColumns = new Set(usersColumns.map((row) => row.name));
+    const existingTicketsColumns = new Set(
+      ticketsColumns.map((row) => row.name)
+    );
+
+    const requiredUsersColumns = {
       bans: "TEXT NOT NULL DEFAULT '[]'",
       kicks: "TEXT NOT NULL DEFAULT '[]'",
       timeouts: "TEXT NOT NULL DEFAULT '[]'",
       jails: "TEXT NOT NULL DEFAULT '[]'",
     };
 
-    for (const [column, type] of Object.entries(requiredColumns)) {
-      if (!existingColumns.has(column)) {
+    for (const [column, type] of Object.entries(requiredUsersColumns)) {
+      if (!existingUsersColumns.has(column)) {
         await db.execute(`ALTER TABLE users ADD COLUMN ${column} ${type}`);
+      }
+    }
+
+    const requiredTicketsColumns = {
+      category: "TEXT NOT NULL",
+      channel: "TEXT NOT NULL",
+    };
+
+    for (const [column, type] of Object.entries(requiredTicketsColumns)) {
+      if (!existingTicketsColumns.has(column)) {
+        await db.execute(`ALTER TABLE tickets ADD COLUMN ${column} ${type}`);
       }
     }
   } catch (error) {
@@ -54,17 +89,5 @@ async function migrateDB(db) {
 }
 
 async function initGuildDB(db) {
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT,
-      guild_id TEXT,
-      warns TEXT NOT NULL DEFAULT '[]',
-      bans TEXT NOT NULL DEFAULT '[]',
-      kicks TEXT NOT NULL DEFAULT '[]',
-      timeouts TEXT NOT NULL DEFAULT '[]',
-      jails TEXT NOT NULL DEFAULT '[]',
-      PRIMARY KEY (id, guild_id)
-    )
-  `);
   await migrateDB(db);
 }

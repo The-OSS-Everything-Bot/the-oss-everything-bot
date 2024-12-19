@@ -1,23 +1,24 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import env from "dotenv";
 import eventHandler from "./src/handlers/eventHandler.js";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import express from "express";
 import bodyParser from "body-parser";
 import { createClient } from 'redis';
 import { createClient as createLibSQL } from '@libsql/client';
 import path from 'path';
+import getAllFiles from "./src/utils/getAllFiles.js";
 
 env.config();
 
 const initDatabases = async () => {
   try {
-    const redis = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379'
-    });
+    // const redis = createClient({
+    //   url: process.env.REDIS_URL || 'redis://localhost:6379'
+    // });
 
-    await redis.connect();
-    console.log('[Info] Connected to Redis');
+    // await redis.connect();
+    // console.log('[Info] Connected to Redis');
 
     const dbPath = path.join(process.cwd(), 'local.db');
     const libsql = createLibSQL({
@@ -26,14 +27,21 @@ const initDatabases = async () => {
     });
 
     try {
-      const migrationSQL = readFileSync('./migrations/001_create_users.sql', 'utf-8');
-      await libsql.execute(migrationSQL);
+      const migrationFiles =  getAllFiles(path.join('./', 'migrations')).map(migration => readFileSync(migration).toString());
+      
+      for (const migration of migrationFiles) {
+        try {
+          await libsql.execute(migration);
+        } catch (error) {
+          console.warn('[Warn] Migration failed:', error);
+        }
+      }
       console.log('[Info] LibSQL migrations completed');
     } catch (migrationError) {
       console.warn('[Warn] Migration may have already been applied:', migrationError.message);
     }
 
-    return { redis, libsql };
+    return { libsql };
   } catch (error) {
     console.error('[Error] Database initialization failed:', error);
     process.exit(1);
@@ -50,8 +58,8 @@ app.post("/webhook", (req, res) => {
 
 const startServer = async () => {
   try {
-    const { redis, libsql } = await initDatabases();
-    global.redis = redis;
+    const { libsql } = await initDatabases();
+    // global.redis = redis;
     global.libsql = libsql;
 
     app.listen(3000, () => {
@@ -70,12 +78,6 @@ const startServer = async () => {
         GatewayIntentBits.GuildModeration,
       ],
     });
-
-    try {
-      readFileSync("./settings.json");
-    } catch (err) {
-      writeFileSync("./settings.json", "{}");
-    }
 
     await client.login(process.env.BOT_TOKEN);
     await eventHandler(client);

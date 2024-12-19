@@ -4,7 +4,7 @@ import {
   ButtonBuilder,
   PermissionFlagsBits,
 } from "discord.js";
-import { readFileSync, writeFileSync } from "fs";
+import { setGuildTickets } from "../../schemas/guild.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -41,19 +41,10 @@ export default {
       const channel = interaction.options.getChannel("channel");
       const category = interaction.options.getChannel("category");
 
-      let settings = readFileSync("./settings.json");
-
-      settings = JSON.parse(settings);
-
-      if (!settings["tickets"]) {
-        settings["tickets"] = {};
-      }
-
-      settings["tickets"][interaction.guild.id] = {
+      await setGuildTickets(interaction.guild.id, {
         channel: channel.id,
         category: category.id,
-      };
-      writeFileSync("./settings.json", JSON.stringify(settings));
+      });
 
       await channel.send({
         embeds: [
