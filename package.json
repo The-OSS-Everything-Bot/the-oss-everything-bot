@@ -2,11 +2,11 @@
   "name": "awfixer-security-bot",
   "version": "0.0.1",
   "description": "",
-  "main": "server.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "dev": "node server.js",
-    "commands": "node commands.js",
+    "dev": "node src/server.js",
+    "commands": "node src/utils/registerCommands.js",
     "format": "prettier --write \"src/**/*.js\""
   },
   "keywords": [
