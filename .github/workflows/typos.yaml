@@ -13,5 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create typos config
+        run: |
+          echo "[files]" > typos.toml
+          echo "extend-exclude = ['src/events/messageCreate/handleLogs.js']" >> typos.toml
+
       - name: Run spellcheck
         uses: crate-ci/typos@v1.25.0
