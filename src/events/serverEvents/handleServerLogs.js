@@ -1,7 +1,7 @@
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings } from "../../utils/dbManager.js";
 
-export default async (client, guild, action) => {
+export default async (client, guild) => {
   try {
     const settings = await getGuildSettings(guild.id);
     if (!settings?.log_channel_id) return;

@@ -1,11 +1,4 @@
-import {
-  EmbedBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  PermissionFlagsBits,
-} from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import { getUser } from "../../schemas/user.js";
 
 export default async (client, interaction) => {

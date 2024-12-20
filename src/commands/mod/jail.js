@@ -1,8 +1,4 @@
-import {
-  PermissionFlagsBits,
-  SlashCommandBuilder,
-  EmbedBuilder,
-} from "discord.js";
+import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import { saveUserRoles } from "../../utils/dbManager.js";
 
@@ -88,7 +84,7 @@ export default {
       );
       const removedRoles = [];
 
-      for (const [id, role] of userRoles) {
+      for (const role of userRoles) {
         removedRoles.push(role.id);
         await member.roles.remove(role);
       }
@@ -97,7 +93,7 @@ export default {
 
       await member.roles.add(jailRole);
 
-      for (const [id, channel] of interaction.guild.channels.cache) {
+      for (const channel of interaction.guild.channels.cache.values()) {
         if (channel.id === jailChannel.id) {
           await channel.permissionOverwrites.create(jailRole, {
             ViewChannel: true,
@@ -213,7 +209,7 @@ export default {
       );
       const removedRoles = [];
 
-      for (const [id, role] of userRoles) {
+      for (const role of userRoles) {
         removedRoles.push(role.id);
         await member.roles.remove(role);
       }
@@ -221,7 +217,7 @@ export default {
       await saveUserRoles(member.id, message.guildId, removedRoles);
       await member.roles.add(jailRole);
 
-      for (const [id, channel] of message.guild.channels.cache) {
+      for (const channel of message.guild.channels.cache.values()) {
         if (channel.id === jailChannel.id) {
           await channel.permissionOverwrites.create(jailRole, {
             ViewChannel: true,
