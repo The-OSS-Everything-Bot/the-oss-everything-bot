@@ -20,7 +20,7 @@ export async function getUser(userId, guildId) {
   }
 
   const user = result.rows[0];
-  ACTIONS.forEach(action => {
+  ACTIONS.forEach((action) => {
     try {
       user[action] = JSON.parse(user[action]);
     } catch {
