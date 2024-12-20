@@ -15,7 +15,7 @@
     "bot",
     "discord"
   ],
-  "author": "Omar Saad",
+  "author": "Axyl",
   "license": "ISC",
   "dependencies": {
     "@libsql/client": "^0.5.6",
