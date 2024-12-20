@@ -126,9 +126,9 @@ async function initGuildDB(db) {
 }
 
 export async function getGuildSettings(guildId) {
-  // const cacheKey = `guild:${guildId}:settings`;
-  // const cached = await global.redis.get(cacheKey);
-  // if (cached) return JSON.parse(cached);
+  const cacheKey = `guild:${guildId}:settings`;
+  const cached = await global.redis.get(cacheKey);
+  if (cached) return JSON.parse(cached);
 
   const guildDB = await getGuildDB(guildId);
   const result = await guildDB.execute({
@@ -137,9 +137,9 @@ export async function getGuildSettings(guildId) {
   });
 
   const settings = result.rows[0] || null;
-  // if (settings) {
-  //   await global.redis.set(cacheKey, JSON.stringify(settings));
-  // }
+  if (settings) {
+    await global.redis.set(cacheKey, JSON.stringify(settings));
+  }
   return settings;
 }
 
