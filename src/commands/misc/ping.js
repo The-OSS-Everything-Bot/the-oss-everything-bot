@@ -15,4 +15,10 @@ export default {
 
     interaction.editReply(`Pong! \`${ping}ms\``);
   },
+
+  async prefixExecute(message) {
+    const sent = await message.reply(
+      `Pong! \`${Date.now() - message.createdTimestamp}ms\``
+    );
+  },
 };

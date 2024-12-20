@@ -99,4 +99,50 @@ export default {
       content: `Status set to ${status}`,
     });
   },
+
+  async prefixExecute(message, args, client) {
+    if (!message.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
+      return message.reply("You don't have permission to use this command");
+    }
+
+    const validStatuses = ["online", "idle", "dnd", "invisible"];
+    const validActivities = [
+      "Playing",
+      "Streaming",
+      "Listening",
+      "Watching",
+      "Competing",
+    ];
+
+    const status = args[0]?.toLowerCase();
+    if (!status || !validStatuses.includes(status)) {
+      return message.reply(
+        "Please provide a valid status: online, idle, dnd, or invisible"
+      );
+    }
+
+    if (args.length === 1) {
+      client.user.setPresence({ status });
+      return message.reply(`Status set to ${status}`);
+    }
+
+    const type = args[1];
+    if (!validActivities.includes(type)) {
+      return message.reply(
+        "Please provide a valid activity type: Playing, Streaming, Listening, Watching, or Competing"
+      );
+    }
+
+    const activityMessage = args.slice(2).join(" ");
+    if (!activityMessage) {
+      return message.reply("Please provide a message for the activity");
+    }
+
+    client.user.setPresence({
+      status,
+      activities: [{ name: activityMessage, type: ActivityType[type] }],
+    });
+
+    await message.reply(`Status set to ${status}`);
+  },
 };

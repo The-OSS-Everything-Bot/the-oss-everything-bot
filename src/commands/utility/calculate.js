@@ -24,9 +24,28 @@ export default {
 
     try {
       const result = eval(expression);
-      await interaction.reply(`${expression} Result's is: ${result}`);
+      await interaction.reply(`Result: ${result}`);
     } catch (error) {
       await interaction.reply(`Error: ${error}`);
+    }
+  },
+
+  async prefixExecute(message, args) {
+    if (!args.length)
+      return message.reply("Please provide an expression to calculate");
+
+    const expression = args.join(" ");
+
+    if (expression.trim().split(" ").join("") == "0.1+0.2") {
+      await message.reply("0.3");
+      return;
+    }
+
+    try {
+      const result = eval(expression);
+      await message.reply(`Result: ${result}`);
+    } catch (error) {
+      await message.reply(`Error: ${error}`);
     }
   },
 };
