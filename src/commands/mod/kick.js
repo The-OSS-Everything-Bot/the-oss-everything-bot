@@ -58,40 +58,4 @@ export default {
       });
     }
   },
-
-  async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.KickMembers]))
-      return message.reply("You don't have permission to use this command");
-
-    const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId) return message.reply("Please provide a user to kick");
-
-    const reason = args.slice(1).join(" ") || "Not provided";
-
-    try {
-      const user = await message.client.users.fetch(userId);
-      const guild = message.guild;
-      await guild.members.kick(user, reason);
-
-      let userData = await getUser(user.id, guild.id);
-      let kicks = userData?.kicks || [];
-
-      kicks.push({
-        reason,
-        by: message.author.id,
-        createdAt: Date.now(),
-      });
-
-      if (!userData) {
-        await createUser(user.id, guild.id, { kicks });
-      } else {
-        await updateUserLogs(user.id, guild.id, "kicks", kicks);
-      }
-
-      await message.reply(`Kicked <@${user.id}>`);
-    } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while kicking the user");
-    }
-  },
 };

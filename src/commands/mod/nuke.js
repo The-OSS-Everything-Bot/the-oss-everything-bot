@@ -49,38 +49,4 @@ export default {
       });
     }
   },
-
-  async prefixExecute(message) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ManageChannels]))
-      return message.reply("You don't have permission to use this command");
-
-    const channel = message.channel;
-    const position = channel.position;
-    const parent = channel.parent;
-    const permissions = channel.permissionOverwrites.cache;
-    const topic = channel.topic;
-    const nsfw = channel.nsfw;
-    const rateLimitPerUser = channel.rateLimitPerUser;
-    const name = channel.name;
-
-    try {
-      const newChannel = await channel.clone({
-        name,
-        topic,
-        nsfw,
-        parent,
-        position,
-        rateLimitPerUser,
-        permissionOverwrites: [...permissions.values()],
-      });
-
-      await channel.delete();
-      await newChannel.send(
-        "https://media1.tenor.com/m/kswttEEUhMQAAAAd/suma.gif"
-      );
-    } catch (error) {
-      console.error("\x1b[31m", `[Error] ${error} at nuke.js`);
-      await message.reply("An error occurred while nuking the channel");
-    }
-  },
 };

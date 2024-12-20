@@ -50,34 +50,4 @@ export default {
       });
     }
   },
-
-  async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.Administrator]))
-      return message.reply("You don't have permission to use this command");
-
-    const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId)
-      return message.reply("Please provide a user to clear infractions for");
-
-    try {
-      const user = await message.client.users.fetch(userId);
-      const userData = await getUser(user.id, message.guildId);
-
-      if (!userData) {
-        return message.reply("No infractions found for this user");
-      }
-
-      const actions = ["warns", "bans", "kicks", "timeouts", "jails"];
-      for (const action of actions) {
-        if (userData[action]?.length) {
-          await updateUserLogs(user.id, message.guildId, action, []);
-        }
-      }
-
-      await message.reply(`Cleared all infractions for <@${user.id}>`);
-    } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while clearing infractions");
-    }
-  },
 };
