@@ -19,4 +19,4 @@ export default async (client, message) => {
     console.error(error);
     await message.reply("An error occurred while executing this command!");
   }
-}; 
+};

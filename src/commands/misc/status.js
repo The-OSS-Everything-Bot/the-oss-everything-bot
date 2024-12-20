@@ -106,11 +106,19 @@ export default {
     }
 
     const validStatuses = ["online", "idle", "dnd", "invisible"];
-    const validActivities = ["Playing", "Streaming", "Listening", "Watching", "Competing"];
+    const validActivities = [
+      "Playing",
+      "Streaming",
+      "Listening",
+      "Watching",
+      "Competing",
+    ];
 
     const status = args[0]?.toLowerCase();
     if (!status || !validStatuses.includes(status)) {
-      return message.reply("Please provide a valid status: online, idle, dnd, or invisible");
+      return message.reply(
+        "Please provide a valid status: online, idle, dnd, or invisible"
+      );
     }
 
     if (args.length === 1) {
@@ -120,7 +128,9 @@ export default {
 
     const type = args[1];
     if (!validActivities.includes(type)) {
-      return message.reply("Please provide a valid activity type: Playing, Streaming, Listening, Watching, or Competing");
+      return message.reply(
+        "Please provide a valid activity type: Playing, Streaming, Listening, Watching, or Competing"
+      );
     }
 
     const activityMessage = args.slice(2).join(" ");

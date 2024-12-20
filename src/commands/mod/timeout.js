@@ -28,7 +28,9 @@ export default {
     .setContexts([0, 1]),
 
   async execute(interaction) {
-    if (!interaction.member.permissions.has([PermissionFlagsBits.ModerateMembers]))
+    if (
+      !interaction.member.permissions.has([PermissionFlagsBits.ModerateMembers])
+    )
       return await interaction.reply({
         content: "You don't have permission to use this command",
         ephemeral: true,
@@ -77,7 +79,12 @@ export default {
       if (!userData) {
         await createUser(user.id, interaction.guildId, { timeouts });
       } else {
-        await updateUserLogs(user.id, interaction.guildId, "timeouts", timeouts);
+        await updateUserLogs(
+          user.id,
+          interaction.guildId,
+          "timeouts",
+          timeouts
+        );
       }
 
       await interaction.reply(`Timed out <@${user.id}> for ${duration}`);
@@ -102,14 +109,18 @@ export default {
     const reason = args.slice(2).join(" ") || "Not provided";
 
     if (!duration.match(/^\d+[dhms]$/)) {
-      return message.reply("Invalid duration format. Use s/m/h/d (e.g. 30s, 5m, 2h, 1d)");
+      return message.reply(
+        "Invalid duration format. Use s/m/h/d (e.g. 30s, 5m, 2h, 1d)"
+      );
     }
 
     const durationMs = ms(duration);
     if (!durationMs) return message.reply("Invalid duration format");
 
     try {
-      const member = await message.guild.members.fetch(userId).catch(() => null);
+      const member = await message.guild.members
+        .fetch(userId)
+        .catch(() => null);
       if (!member) return message.reply("User not found in this server");
 
       await member.timeout(durationMs, reason);

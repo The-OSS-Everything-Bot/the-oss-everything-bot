@@ -178,20 +178,28 @@ export default {
     if (!channelId) return message.reply("Please provide a channel for jail");
 
     const duration = args[2]?.match(/^\d+[dhms]$/) ? args[2] : null;
-    const reason = duration ? args.slice(3).join(" ") : args.slice(2).join(" ") || "Not provided";
+    const reason = duration
+      ? args.slice(3).join(" ")
+      : args.slice(2).join(" ") || "Not provided";
 
     try {
       const targetUser = await message.client.users.fetch(userId);
       const jailChannel = await message.guild.channels.fetch(channelId);
       const parentCategory = jailChannel.parent;
 
-      const member = await message.guild.members.fetch(targetUser.id).catch(() => null);
+      const member = await message.guild.members
+        .fetch(targetUser.id)
+        .catch(() => null);
       if (!member) return message.reply("User not found in this server");
 
       if (member.roles.cache.some((role) => role.name === "Jailed"))
-        return message.reply(`Unable to jail ${member} as they are currently jailed`);
+        return message.reply(
+          `Unable to jail ${member} as they are currently jailed`
+        );
 
-      let jailRole = message.guild.roles.cache.find(role => role.name === "Jailed");
+      let jailRole = message.guild.roles.cache.find(
+        (role) => role.name === "Jailed"
+      );
       if (!jailRole) {
         jailRole = await message.guild.roles.create({
           name: "Jailed",
@@ -200,7 +208,9 @@ export default {
         });
       }
 
-      const userRoles = member.roles.cache.filter(role => role.id !== message.guild.id);
+      const userRoles = member.roles.cache.filter(
+        (role) => role.id !== message.guild.id
+      );
       const removedRoles = [];
 
       for (const [id, role] of userRoles) {

@@ -35,20 +35,18 @@ export default {
   },
 
   async prefixExecute(message, args) {
-    if (args.length < 2) return message.reply("Please provide a header and message");
+    if (args.length < 2)
+      return message.reply("Please provide a header and message");
 
     const header = args[0];
     const content = args.slice(1).join(" ");
 
     await message.reply({
       embeds: [
-        new EmbedBuilder()
-          .setTitle(header)
-          .setDescription(content)
-          .setAuthor({
-            name: message.author.tag,
-            iconURL: message.author.displayAvatarURL(),
-          }),
+        new EmbedBuilder().setTitle(header).setDescription(content).setAuthor({
+          name: message.author.tag,
+          iconURL: message.author.displayAvatarURL(),
+        }),
       ],
     });
   },

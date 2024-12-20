@@ -56,12 +56,13 @@ export default {
       return message.reply("You don't have permission to use this command");
 
     const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId) return message.reply("Please provide a user to clear infractions for");
+    if (!userId)
+      return message.reply("Please provide a user to clear infractions for");
 
     try {
       const user = await message.client.users.fetch(userId);
       const userData = await getUser(user.id, message.guildId);
-      
+
       if (!userData) {
         return message.reply("No infractions found for this user");
       }

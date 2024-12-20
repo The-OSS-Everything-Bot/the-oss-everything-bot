@@ -15,7 +15,9 @@ export default {
     .setContexts([0]),
 
   async execute(interaction) {
-    if (!interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
+    if (
+      !interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])
+    ) {
       return await interaction.reply({
         content: "You don't have permission to use this command",
         ephemeral: true,
@@ -62,7 +64,7 @@ export default {
     try {
       const channelId = args[0].replace(/[<#>]/g, "");
       const channel = message.guild.channels.cache.get(channelId);
-      
+
       if (!channel) return message.reply("Invalid channel");
 
       const guildDB = await getGuildDB(message.guildId);
@@ -84,7 +86,9 @@ export default {
       await message.reply(`Set logging channel to ${channel}`);
     } catch (error) {
       console.error(error);
-      await message.reply("An error occurred while setting the logging channel");
+      await message.reply(
+        "An error occurred while setting the logging channel"
+      );
     }
   },
 };

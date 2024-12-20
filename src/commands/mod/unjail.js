@@ -98,10 +98,14 @@ export default {
       if (!userData?.jails?.length)
         return message.reply("This user is not jailed");
 
-      const member = await message.guild.members.fetch(targetUser.id).catch(() => null);
+      const member = await message.guild.members
+        .fetch(targetUser.id)
+        .catch(() => null);
       if (!member) return message.reply("User not found in this server");
 
-      const jailRole = message.guild.roles.cache.find(role => role.name === "Jailed");
+      const jailRole = message.guild.roles.cache.find(
+        (role) => role.name === "Jailed"
+      );
       if (!jailRole) return message.reply("Jail role not found");
 
       await member.roles.remove(jailRole);

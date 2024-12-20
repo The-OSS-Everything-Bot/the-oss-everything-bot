@@ -72,7 +72,8 @@ export default {
 
   async prefixExecute(message, args) {
     const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId) return message.reply("Please provide a user to check logs for");
+    if (!userId)
+      return message.reply("Please provide a user to check logs for");
 
     try {
       const user = await message.client.users.fetch(userId);

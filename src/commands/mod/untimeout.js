@@ -15,7 +15,9 @@ export default {
     .setContexts([0, 1]),
 
   async execute(interaction) {
-    if (!interaction.member.permissions.has([PermissionFlagsBits.ModerateMembers]))
+    if (
+      !interaction.member.permissions.has([PermissionFlagsBits.ModerateMembers])
+    )
       return await interaction.reply({
         content: "You don't have permission to use this command",
         ephemeral: true,
@@ -70,7 +72,9 @@ export default {
     const userId = args[0].replace(/[<@!>]/g, "");
 
     try {
-      const member = await message.guild.members.fetch(userId).catch(() => null);
+      const member = await message.guild.members
+        .fetch(userId)
+        .catch(() => null);
       if (!member) return message.reply("User not found in this server");
 
       await member.timeout(null);

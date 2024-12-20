@@ -195,7 +195,8 @@ export default {
     try {
       switch (subcommand) {
         case "give": {
-          if (args.length < 3) return message.reply("Please provide a user and role");
+          if (args.length < 3)
+            return message.reply("Please provide a user and role");
           const userId = args[1].replace(/[<@!>]/g, "");
           const roleId = args[2].replace(/[<@&>]/g, "");
           const member = await message.guild.members.fetch(userId);
@@ -206,7 +207,8 @@ export default {
           break;
         }
         case "remove": {
-          if (args.length < 3) return message.reply("Please provide a user and role");
+          if (args.length < 3)
+            return message.reply("Please provide a user and role");
           const userId = args[1].replace(/[<@!>]/g, "");
           const roleId = args[2].replace(/[<@&>]/g, "");
           const member = await message.guild.members.fetch(userId);
@@ -217,7 +219,8 @@ export default {
           break;
         }
         case "create": {
-          if (args.length < 2) return message.reply("Please provide a role name");
+          if (args.length < 2)
+            return message.reply("Please provide a role name");
           const name = args[1];
           const color = args[2] || "#000000";
           const role = await message.guild.roles.create({ name, color });
@@ -234,7 +237,8 @@ export default {
           break;
         }
         case "rename": {
-          if (args.length < 3) return message.reply("Please provide a role and new name");
+          if (args.length < 3)
+            return message.reply("Please provide a role and new name");
           const roleId = args[1].replace(/[<@&>]/g, "");
           const newName = args[2];
           const role = await message.guild.roles.fetch(roleId);
@@ -244,7 +248,8 @@ export default {
           break;
         }
         case "color": {
-          if (args.length < 3) return message.reply("Please provide a role and color");
+          if (args.length < 3)
+            return message.reply("Please provide a role and color");
           const roleId = args[1].replace(/[<@&>]/g, "");
           const color = args[2];
           const role = await message.guild.roles.fetch(roleId);

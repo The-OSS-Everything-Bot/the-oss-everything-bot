@@ -31,7 +31,8 @@ export default {
   },
 
   async prefixExecute(message, args) {
-    if (!args.length) return message.reply("Please provide an expression to calculate");
+    if (!args.length)
+      return message.reply("Please provide an expression to calculate");
 
     const expression = args.join(" ");
 
