@@ -54,4 +54,4 @@ jobs:
           echo "REDIS_URL=redis://localhost:6379" >> .env
           
       - name: Verify code compiles
-        run: node -c src/**/*.js
+        run: npm run dev
