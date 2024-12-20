@@ -1,7 +1,4 @@
-import {
-  PermissionFlagsBits,
-  SlashCommandBuilder,
-} from "discord.js";
+import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import { saveUserRoles } from "../../utils/dbManager.js";
 
