@@ -14,6 +14,28 @@ export default async (client, message) => {
 
   if (!command) return;
 
+  const getCommandUsage = (cmd) => {
+    const options = cmd.data.options;
+    if (!options) return "";
+
+    const requiredOptions = options
+      .filter((opt) => opt.required)
+      .map((opt) => `<${opt.name}>`)
+      .join(" ");
+
+    const optionalOptions = options
+      .filter((opt) => !opt.required)
+      .map((opt) => `[${opt.name}]`)
+      .join(" ");
+
+    return `${prefix}${cmd.data.name} ${requiredOptions} ${optionalOptions}`.trim();
+  };
+
+  if (args.length === 0 && command.data.options?.some((opt) => opt.required)) {
+    const usage = getCommandUsage(command);
+    return message.reply(`Usage: ${usage}`);
+  }
+
   try {
     const fakeInteraction = createCommandInteraction(message, args);
     await command.execute(fakeInteraction, client);
