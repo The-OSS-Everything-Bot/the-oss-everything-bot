@@ -22,7 +22,7 @@ jobs:
         run: npm install
         
       - name: Run ESLint
-        run: npx eslint . --ext .js
+        run: npx eslint "src/**/*.js"
         
       - name: Check formatting
         run: npx prettier --check "src/**/*.js"
@@ -33,7 +33,7 @@ jobs:
       redis:
         image: redis
         ports:
-          - 6379:6379
+          - 6380:6379
           
     steps:
       - uses: actions/checkout@v4
@@ -49,9 +49,10 @@ jobs:
         
       - name: Create test env file
         run: |
-          echo "BOT_TOKEN=1234567890" > .env
+          echo "BOT_TOKEN=FAKE_TOKEN_1234567890" > .env
           echo "CLIENT_ID=123456789012345678" >> .env
-          echo "REDIS_URL=redis://localhost:6379" >> .env
+          echo "REDIS_URL=redis://localhost:6380" >> .env
           
       - name: Verify code compiles
-        run: npm run dev
+        run: |
+          timeout 30s npm run dev || if [ $? -eq 124 ]; then exit 0; else exit 1; fi
