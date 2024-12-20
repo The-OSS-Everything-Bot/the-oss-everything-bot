@@ -10,6 +10,18 @@ export default {
   data: new SlashCommandBuilder()
     .setName("ticket")
     .setDescription("Setups a ticket system")
+    .addStringOption((option) =>
+      option
+        .setName("title")
+        .setDescription("The title of the ticket")
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("description")
+        .setDescription("The description of the ticket")
+        .setRequired(true)
+    )
     .addChannelOption((option) =>
       option
         .setName("channel")
@@ -23,6 +35,11 @@ export default {
         .setRequired(true)
     ),
 
+  /**
+   *
+   * @param {import("discord.js").CommandInteraction} interaction
+   * @returns
+   */
   async execute(interaction) {
     await interaction.deferReply();
 
@@ -39,6 +56,16 @@ export default {
 
       const channel = interaction.options.getChannel("channel");
       const category = interaction.options.getChannel("category");
+      const title = interaction.options.getString("title");
+      const description = interaction.options.getString("description");
+
+      if (category.type !== 4) {
+        throw "Category must be a category";
+      }
+
+      if (channel.type !== 0) {
+        throw "Channel must be a text channel";
+      }
 
       await setGuildTickets(interaction.guild.id, {
         channel: channel.id,
@@ -47,9 +74,7 @@ export default {
 
       await channel.send({
         embeds: [
-          new EmbedBuilder()
-            .setTitle("Ticket")
-            .setDescription("Would you like to create new ticket?"),
+          new EmbedBuilder().setTitle(title).setDescription(description),
         ],
         components: [
           {
@@ -58,7 +83,7 @@ export default {
               new ButtonBuilder()
                 .setCustomId(`new ticket`)
                 .setLabel("Create ticket")
-                .setStyle(3)
+                .setStyle(1)
                 .setEmoji("🎫"),
             ],
           },
@@ -71,6 +96,25 @@ export default {
       });
     } catch (err) {
       console.error(`[Error] ${err}`);
+
+      if (err.includes("Cannot read properties of null")) {
+        return await interaction.editReply({
+          content: "Missing inputs",
+        });
+      }
+
+      if (err.includes("Category must be a category")) {
+        return await interaction.editReply({
+          content: "Category must be a category",
+        });
+      }
+
+      if (err.includes("Channel must be a text channel")) {
+        return await interaction.editReply({
+          content: "Channel must be a text channel",
+        });
+      }
+
       await interaction.editReply({
         content: "Something went wrong",
         ephemeral: true,

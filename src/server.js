@@ -1,10 +1,10 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import env from "dotenv";
-import eventHandler from "./src/handlers/eventHandler.js";
+import eventHandler from "./handlers/eventHandler.js";
 import { readFileSync } from "fs";
 import express from "express";
 import bodyParser from "body-parser";
-import { createClient } from 'redis';
+// import { createClient } from 'redis';
 import { createClient as createLibSQL } from '@libsql/client';
 import path from 'path';
 import getAllFiles from "./utils/getAllFiles.js";
@@ -12,7 +12,6 @@ import getAllFiles from "./utils/getAllFiles.js";
 env.config();
 
 const initDatabases = async () => {
-  try {
     const redis = createClient({
       url: process.env.REDIS_URL || 'redis://localhost:6379'
     });

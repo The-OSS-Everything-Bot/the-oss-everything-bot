@@ -1,5 +1,5 @@
 import { ChannelType, EmbedBuilder, PermissionsBitField } from "discord.js";
-import { readFileSync } from "fs";
+import { getGuildTicket } from "../../schemas/guild.js";
 
 export default async (client, interaction) => {
   if (!interaction.isButton()) return;
@@ -16,7 +16,7 @@ export default async (client, interaction) => {
 
         const channel = await interaction.guild.channels.create({
           name: `ticket-${interaction.user.id}`,
-          parent: settings.category_id,
+          parent: category,
           permissionOverwrites: [
             {
               id: interaction.guild.roles.everyone.id,
@@ -55,16 +55,23 @@ export default async (client, interaction) => {
                 {
                   type: 2,
                   label: "Close",
-                  style: 4,
+                  style: 2,
                   customId: "close ticket",
                   emoji: "🔒",
                 },
+                {
+                  type: 2,
+                  label: "Delete",
+                  style: 4,
+                  customId: "delete ticket",
+                  emoji: "🗑️",
+                }
               ],
             },
           ],
         });
 
-        await interaction.editReply({
+        await interaction.reply({
           content: "Ticket created",
           ephemeral: true,
         });
@@ -80,6 +87,20 @@ export default async (client, interaction) => {
           content: "Ticket closed",
           ephemeral: false,
         });
+        break;
+
+      case "delete ticket":
+        if (
+          !interaction.member.permissions.has([
+            PermissionsBitField.Flags.ManageChannels,
+          ])
+        ) {
+          return await interaction.reply({
+            content: "You don't have permission to use this command",
+            ephemeral: true,
+          });
+        }
+        await interaction.channel.delete();
         break;
     }
   } catch (error) {

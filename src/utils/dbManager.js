@@ -118,11 +118,6 @@ async function initGuildDB(db) {
   `);
 
   await db.execute(`
-    CREATE INDEX IF NOT EXISTS idx_guild_tickets_guild_id 
-    ON guild_tickets(guild_id)
-  `);
-
-  await db.execute(`
     CREATE INDEX IF NOT EXISTS idx_role_persistence_user_guild 
     ON role_persistence(user_id, guild_id)
   `);
@@ -131,9 +126,9 @@ async function initGuildDB(db) {
 }
 
 export async function getGuildSettings(guildId) {
-  const cacheKey = `guild:${guildId}:settings`;
-  const cached = await global.redis.get(cacheKey);
-  if (cached) return JSON.parse(cached);
+  // const cacheKey = `guild:${guildId}:settings`;
+  // const cached = await global.redis.get(cacheKey);
+  // if (cached) return JSON.parse(cached);
 
   const guildDB = await getGuildDB(guildId);
   const result = await guildDB.execute({
@@ -142,28 +137,10 @@ export async function getGuildSettings(guildId) {
   });
 
   const settings = result.rows[0] || null;
-  if (settings) {
-    await global.redis.set(cacheKey, JSON.stringify(settings));
-  }
+  // if (settings) {
+  //   await global.redis.set(cacheKey, JSON.stringify(settings));
+  // }
   return settings;
-}
-
-export async function getGuildTickets(guildId) {
-  const cacheKey = `guild:${guildId}:tickets`;
-  const cached = await global.redis.get(cacheKey);
-  if (cached) return JSON.parse(cached);
-
-  const guildDB = await getGuildDB(guildId);
-  const result = await guildDB.execute({
-    sql: "SELECT channel_id, category_id FROM guild_tickets WHERE guild_id = ?",
-    args: [guildId],
-  });
-
-  const tickets = result.rows[0] || null;
-  if (tickets) {
-    await global.redis.set(cacheKey, JSON.stringify(tickets));
-  }
-  return tickets;
 }
 
 export async function saveUserRoles(userId, guildId, roles) {
