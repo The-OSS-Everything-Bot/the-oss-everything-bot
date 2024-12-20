@@ -20,18 +20,26 @@ export default {
 
     const categories = {
       info: commands.filter(
-        (cmd) => cmd.data.name.startsWith("info") || cmd.category === "info"
+        (cmd) =>
+          cmd.data.name.match(/^(info|serverinfo|help)/) ||
+          cmd.category === "info"
       ),
       mod: commands.filter(
-        (cmd) => cmd.data.name.startsWith("mod") || cmd.category === "mod"
+        (cmd) =>
+          cmd.data.name.match(
+            /^(ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban)/
+          ) || cmd.category === "mod"
       ),
       utility: commands.filter(
         (cmd) =>
-          cmd.data.name.startsWith("utility") || cmd.category === "utility"
+          cmd.data.name.match(/^(ticket|search|status|setlogs)/) ||
+          cmd.category === "utility"
       ),
       misc: commands.filter(
         (cmd) =>
-          !cmd.data.name.match(/^(info|mod|utility)/) &&
+          !cmd.data.name.match(
+            /^(info|serverinfo|help|ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban|ticket|search|status|setlogs)/
+          ) &&
           cmd.category !== "info" &&
           cmd.category !== "mod" &&
           cmd.category !== "utility"
@@ -136,18 +144,26 @@ export default {
 
     const categories = {
       info: commands.filter(
-        (cmd) => cmd.data.name.startsWith("info") || cmd.category === "info"
+        (cmd) =>
+          cmd.data.name.match(/^(info|serverinfo|help)/) ||
+          cmd.category === "info"
       ),
       mod: commands.filter(
-        (cmd) => cmd.data.name.startsWith("mod") || cmd.category === "mod"
+        (cmd) =>
+          cmd.data.name.match(
+            /^(ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban)/
+          ) || cmd.category === "mod"
       ),
       utility: commands.filter(
         (cmd) =>
-          cmd.data.name.startsWith("utility") || cmd.category === "utility"
+          cmd.data.name.match(/^(ticket|search|status|setlogs)/) ||
+          cmd.category === "utility"
       ),
       misc: commands.filter(
         (cmd) =>
-          !cmd.data.name.match(/^(info|mod|utility)/) &&
+          !cmd.data.name.match(
+            /^(info|serverinfo|help|ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban|ticket|search|status|setlogs)/
+          ) &&
           cmd.category !== "info" &&
           cmd.category !== "mod" &&
           cmd.category !== "utility"
