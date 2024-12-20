@@ -1,0 +1,58 @@
+name: Lint & Test
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run ESLint
+        run: npx eslint "src/**/*.js"
+        
+      - name: Check formatting
+        run: npx prettier --check "src/**/*.js"
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6380:6379
+          
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Create test env file
+        run: |
+          echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" > .env
+          echo "CLIENT_ID=123456789012345678" >> .env
+          echo "REDIS_URL=redis://localhost:6380" >> .env
+          
+      - name: Verify code compiles
+        run: |
+          timeout 30s npm run dev || if [ $? -eq 124 ]; then exit 0; else exit 1; fi
