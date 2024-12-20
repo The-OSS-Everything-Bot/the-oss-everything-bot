@@ -102,6 +102,17 @@ async function initGuildDB(db) {
   `);
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS role_persistence (
+      user_id TEXT,
+      guild_id TEXT,
+      roles TEXT NOT NULL DEFAULT '[]',
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      PRIMARY KEY (user_id, guild_id)
+    )
+  `);
+
+  await db.execute(`
     CREATE INDEX IF NOT EXISTS idx_guild_settings_guild_id 
     ON guild_settings(guild_id)
   `);
@@ -109,6 +120,11 @@ async function initGuildDB(db) {
   await db.execute(`
     CREATE INDEX IF NOT EXISTS idx_guild_tickets_guild_id 
     ON guild_tickets(guild_id)
+  `);
+
+  await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_role_persistence_user_guild 
+    ON role_persistence(user_id, guild_id)
   `);
 
   await migrateDB(db);
@@ -148,4 +164,36 @@ export async function getGuildTickets(guildId) {
     await global.redis.set(cacheKey, JSON.stringify(tickets));
   }
   return tickets;
+}
+
+export async function saveUserRoles(userId, guildId, roles) {
+  const guildDB = await getGuildDB(guildId);
+  await guildDB.execute({
+    sql: `INSERT INTO role_persistence (user_id, guild_id, roles)
+          VALUES (?, ?, ?)
+          ON CONFLICT (user_id, guild_id)
+          DO UPDATE SET roles = ?, updated_at = strftime('%s', 'now')`,
+    args: [userId, guildId, JSON.stringify(roles), JSON.stringify(roles)],
+  });
+
+  const cacheKey = `guild:${guildId}:user:${userId}:roles`;
+  await global.redis.set(cacheKey, JSON.stringify(roles));
+}
+
+export async function getUserRoles(userId, guildId) {
+  const cacheKey = `guild:${guildId}:user:${userId}:roles`;
+  const cached = await global.redis.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  const guildDB = await getGuildDB(guildId);
+  const result = await guildDB.execute({
+    sql: "SELECT roles FROM role_persistence WHERE user_id = ? AND guild_id = ?",
+    args: [userId, guildId],
+  });
+
+  const roles = result.rows[0]?.roles ? JSON.parse(result.rows[0].roles) : [];
+  if (roles.length) {
+    await global.redis.set(cacheKey, JSON.stringify(roles));
+  }
+  return roles;
 }

@@ -30,12 +30,15 @@ const initDatabases = async () => {
       const migrationSQL = getAllFiles(path.join('./', 'migrations')).map(migration => readFileSync(migration, 'utf8').toString());
       
       for (const migration of migrationSQL) {
-        await libsql.execute(migration);
+        try {
+          await libsql.execute(migration);
+        } catch (migrationError) {
+          if (!migrationError.message.includes("already exists")) {
+            throw migrationError;
+          }
+        }
       }
       console.log('[Info] LibSQL migrations completed');
-    } catch (migrationError) {
-      console.warn('[Warn] Migration may have already been applied:', migrationError.message);
-    }
 
     return { redis, libsql };
   } catch (error) {

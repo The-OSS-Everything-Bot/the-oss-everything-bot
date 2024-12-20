@@ -60,13 +60,12 @@ export default async (client, interaction) => {
                     .setTitle("Message Deleted"),
                 ],
               });
+              await interaction.reply({
+                content: "Message deleted successfully",
+                ephemeral: true,
+              });
             }
           }
-
-          await interaction.reply({
-            content: "Message deleted successfully",
-            ephemeral: true,
-          });
         } catch (error) {
           console.error("[Error] Failed to delete message:", error);
           await interaction.reply({
