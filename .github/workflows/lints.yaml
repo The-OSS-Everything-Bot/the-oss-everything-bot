@@ -49,7 +49,7 @@ jobs:
         
       - name: Create test env file
         run: |
-          echo "BOT_TOKEN=FAKE_TOKEN_1234567890" > .env
+          echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" > .env
           echo "CLIENT_ID=123456789012345678" >> .env
           echo "REDIS_URL=redis://localhost:6380" >> .env
           
