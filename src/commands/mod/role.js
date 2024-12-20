@@ -1,25 +1,23 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("role")
-    .setDescription("Role commands")
-
-    // modifying members
+    .setDescription("Manage roles")
     .addSubcommand((subcommand) =>
       subcommand
         .setName("give")
-        .setDescription("Adds a role to a user")
+        .setDescription("Gives a role to a user")
         .addUserOption((option) =>
           option
             .setName("user")
-            .setDescription("The user to add the role to")
+            .setDescription("The user to give the role to")
             .setRequired(true)
         )
         .addRoleOption((option) =>
           option
             .setName("role")
-            .setDescription("The role to add")
+            .setDescription("The role to give")
             .setRequired(true)
         )
     )
@@ -40,12 +38,10 @@ export default {
             .setRequired(true)
         )
     )
-
-    // creating roles
     .addSubcommand((subcommand) =>
       subcommand
         .setName("create")
-        .setDescription("Creates a role")
+        .setDescription("Creates a new role")
         .addStringOption((option) =>
           option
             .setName("name")
@@ -55,12 +51,10 @@ export default {
         .addStringOption((option) =>
           option
             .setName("color")
-            .setDescription("The color of the role")
-            .setRequired(true)
+            .setDescription("The color of the role (hex)")
+            .setRequired(false)
         )
     )
-
-    // deleting roles
     .addSubcommand((subcommand) =>
       subcommand
         .setName("delete")
@@ -72,8 +66,6 @@ export default {
             .setRequired(true)
         )
     )
-
-    // modifying roles
     .addSubcommand((subcommand) =>
       subcommand
         .setName("rename")
@@ -87,50 +79,47 @@ export default {
         .addStringOption((option) =>
           option
             .setName("name")
-            .setDescription("The new name of the role")
+            .setDescription("The new name")
             .setRequired(true)
         )
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("color")
-        .setDescription("Changes the color of a role")
+        .setDescription("Changes a role's color")
         .addRoleOption((option) =>
           option
             .setName("role")
-            .setDescription("The role to change the color of")
+            .setDescription("The role to change")
             .setRequired(true)
         )
         .addStringOption((option) =>
           option
             .setName("color")
-            .setDescription("The new color of the role")
+            .setDescription("The new color (hex)")
             .setRequired(true)
         )
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("icon")
-        .setDescription("Changes the icon of a role")
+        .setDescription("Changes a role's icon")
         .addRoleOption((option) =>
           option
             .setName("role")
-            .setDescription("The role to change the icon of")
+            .setDescription("The role to change")
             .setRequired(true)
         )
         .addAttachmentOption((option) =>
           option
             .setName("icon")
-            .setDescription("The new icon of the role")
+            .setDescription("The new icon")
             .setRequired(true)
         )
     )
-    .setIntegrationTypes([0, 1])
-    .setContexts([0, 1]),
+    .setIntegrationTypes([0])
+    .setContexts([0]),
 
-  /**
-   * @param {import("discord.js").CommandInteraction} interaction
-   */
   async execute(interaction) {
     await interaction.deferReply();
 
@@ -141,7 +130,6 @@ export default {
       });
 
     const command = interaction.options.getSubcommand();
-
     const role = interaction.options.getRole("role");
     const color = interaction.options.getString("color");
     const name = interaction.options.getString("name");
@@ -187,13 +175,90 @@ export default {
       }
 
       await interaction.editReply({
-        content: `${command} operation successfully`,
+        content: `${command} operation successful`,
       });
     } catch (error) {
       console.log(`[error] ${error}`);
       await interaction.editReply({
         content: `Failed to ${command}`,
       });
+    }
+  },
+
+  async prefixExecute(message, args) {
+    if (!message.member.permissions.has([PermissionFlagsBits.ManageRoles]))
+      return message.reply("You don't have permission to use this command");
+
+    if (!args.length) return message.reply("Please provide a subcommand");
+
+    const subcommand = args[0].toLowerCase();
+    try {
+      switch (subcommand) {
+        case "give": {
+          if (args.length < 3) return message.reply("Please provide a user and role");
+          const userId = args[1].replace(/[<@!>]/g, "");
+          const roleId = args[2].replace(/[<@&>]/g, "");
+          const member = await message.guild.members.fetch(userId);
+          const role = await message.guild.roles.fetch(roleId);
+          if (!member || !role) return message.reply("Invalid user or role");
+          await member.roles.add(role);
+          await message.reply(`Given ${role} to ${member}`);
+          break;
+        }
+        case "remove": {
+          if (args.length < 3) return message.reply("Please provide a user and role");
+          const userId = args[1].replace(/[<@!>]/g, "");
+          const roleId = args[2].replace(/[<@&>]/g, "");
+          const member = await message.guild.members.fetch(userId);
+          const role = await message.guild.roles.fetch(roleId);
+          if (!member || !role) return message.reply("Invalid user or role");
+          await member.roles.remove(role);
+          await message.reply(`Removed ${role} from ${member}`);
+          break;
+        }
+        case "create": {
+          if (args.length < 2) return message.reply("Please provide a role name");
+          const name = args[1];
+          const color = args[2] || "#000000";
+          const role = await message.guild.roles.create({ name, color });
+          await message.reply(`Created role ${role}`);
+          break;
+        }
+        case "delete": {
+          if (args.length < 2) return message.reply("Please provide a role");
+          const roleId = args[1].replace(/[<@&>]/g, "");
+          const role = await message.guild.roles.fetch(roleId);
+          if (!role) return message.reply("Invalid role");
+          await role.delete();
+          await message.reply("Role deleted");
+          break;
+        }
+        case "rename": {
+          if (args.length < 3) return message.reply("Please provide a role and new name");
+          const roleId = args[1].replace(/[<@&>]/g, "");
+          const newName = args[2];
+          const role = await message.guild.roles.fetch(roleId);
+          if (!role) return message.reply("Invalid role");
+          await role.edit({ name: newName });
+          await message.reply(`Renamed role to ${newName}`);
+          break;
+        }
+        case "color": {
+          if (args.length < 3) return message.reply("Please provide a role and color");
+          const roleId = args[1].replace(/[<@&>]/g, "");
+          const color = args[2];
+          const role = await message.guild.roles.fetch(roleId);
+          if (!role) return message.reply("Invalid role");
+          await role.edit({ color });
+          await message.reply(`Changed role color to ${color}`);
+          break;
+        }
+        default:
+          return message.reply("Invalid subcommand");
+      }
+    } catch (error) {
+      console.error(error);
+      await message.reply("An error occurred while executing the command");
     }
   },
 };

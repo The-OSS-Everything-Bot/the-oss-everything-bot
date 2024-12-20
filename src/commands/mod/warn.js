@@ -46,7 +46,7 @@ export default {
       }
 
       interaction.reply({
-        content: `Warned <@${interaction.options.getUser("user").id}>`,
+        content: `Warned <@${user.id}>`,
       });
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at warn.js`);
@@ -54,6 +54,39 @@ export default {
         content: "An error occurred while warning the user",
         ephemeral: true,
       });
+    }
+  },
+
+  async prefixExecute(message, args) {
+    if (!message.member.permissions.has([PermissionFlagsBits.KickMembers]))
+      return message.reply("You don't have permission to use this command");
+
+    const userId = args[0]?.replace(/[<@!>]/g, "");
+    if (!userId) return message.reply("Please provide a user to warn");
+
+    const reason = args.slice(1).join(" ") || "Not provided";
+
+    try {
+      const user = await message.client.users.fetch(userId);
+      let userData = await getUser(user.id, message.guildId);
+      let warns = userData?.warns || [];
+
+      warns.push({
+        reason,
+        by: message.author.id,
+        createdAt: Date.now(),
+      });
+
+      if (!userData) {
+        await createUser(user.id, message.guildId, { warns });
+      } else {
+        await updateUserLogs(user.id, message.guildId, "warns", warns);
+      }
+
+      await message.reply(`Warned <@${user.id}>`);
+    } catch (error) {
+      console.error("\x1b[31m", `[Error] ${error} at warn.js`);
+      await message.reply("An error occurred while warning the user");
     }
   },
 };
