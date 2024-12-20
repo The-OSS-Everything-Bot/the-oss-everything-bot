@@ -1,5 +1,5 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
+import { getUser, updateUserLogs } from "../../schemas/user.js";
 
 export default {
   data: new SlashCommandBuilder()

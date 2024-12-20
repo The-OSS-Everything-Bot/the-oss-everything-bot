@@ -17,7 +17,7 @@ export default {
   },
 
   async prefixExecute(message) {
-    const sent = await message.reply(
+    await message.reply(
       `Pong! \`${Date.now() - message.createdTimestamp}ms\``
     );
   },

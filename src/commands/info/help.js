@@ -39,7 +39,7 @@ export default {
     };
 
     const pages = Object.entries(categories)
-      .filter(([_, cmds]) => cmds.length > 0)
+      .filter(([cmds]) => cmds.length > 0)
       .map(([category, cmds], index, array) => {
         const description = cmds
           .map((cmd) => `**/${cmd.data.name}**\n${cmd.data.description}`)
@@ -155,7 +155,7 @@ export default {
     };
 
     const pages = Object.entries(categories)
-      .filter(([_, cmds]) => cmds.length > 0)
+      .filter(([cmds]) => cmds.length > 0)
       .map(([category, cmds], index, array) => {
         const description = cmds
           .map((cmd) => `**%${cmd.data.name}**\n${cmd.data.description}`)
