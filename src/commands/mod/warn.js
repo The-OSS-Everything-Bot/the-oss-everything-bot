@@ -1,5 +1,6 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -45,6 +46,17 @@ export default {
         await updateUserLogs(user.id, guildId, "warns", warns);
       }
 
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_WARN",
+        {
+          target: user,
+          executor: interaction.user,
+          reason: interaction.options.getString("reason") || "Not provided",
+        }
+      );
+
       interaction.reply({
         content: `Warned <@${user.id}>`,
       });
@@ -83,7 +95,13 @@ export default {
         await updateUserLogs(user.id, message.guildId, "warns", warns);
       }
 
-      await message.reply(`Warned <@${user.id}>`);
+      await handleServerLogs(message.client, message.guild, "COMMAND_WARN", {
+        target: user,
+        executor: message.author,
+        reason,
+      });
+
+      message.reply(`Warned <@${user.id}>`);
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at warn.js`);
       await message.reply("An error occurred while warning the user");

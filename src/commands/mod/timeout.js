@@ -1,6 +1,7 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import ms from "ms";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -66,6 +67,18 @@ export default {
 
       await member.timeout(durationMs, reason);
 
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_TIMEOUT",
+        {
+          target: user,
+          executor: interaction.user,
+          duration: duration,
+          reason: reason,
+        }
+      );
+
       let userData = await getUser(user.id, interaction.guildId);
       let timeouts = userData?.timeouts || [];
 
@@ -124,6 +137,13 @@ export default {
       if (!member) return message.reply("User not found in this server");
 
       await member.timeout(durationMs, reason);
+
+      await handleServerLogs(message.client, message.guild, "COMMAND_TIMEOUT", {
+        target: member.user,
+        executor: message.author,
+        duration: duration,
+        reason: reason,
+      });
 
       let userData = await getUser(userId, message.guildId);
       let timeouts = userData?.timeouts || [];

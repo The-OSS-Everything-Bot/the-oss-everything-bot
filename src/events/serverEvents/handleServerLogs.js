@@ -1,7 +1,7 @@
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings } from "../../utils/dbManager.js";
 
-export default async (client, guild) => {
+export default async (client, guild, eventType, data = {}) => {
   try {
     const settings = await getGuildSettings(guild.id);
     if (!settings?.log_channel_id) return;
@@ -9,23 +9,41 @@ export default async (client, guild) => {
     const logsChannel = await client.channels.fetch(settings.log_channel_id);
     if (!logsChannel) return;
 
-    const auditLogs = await guild.fetchAuditLogs({ limit: 1 });
-    const log = auditLogs.entries.first();
-    if (!log) return;
-
     const embed = new EmbedBuilder()
       .setTimestamp()
-      .setFooter({ text: `ID: ${log.executor.id}` });
+      .setFooter({ text: `ID: ${data.target?.id || "Unknown"}` });
 
-    switch (log.action) {
+    switch (eventType) {
+      case AuditLogEvent.MemberUpdate:
+        embed
+          .setTitle("Member Updated")
+          .setColor(0x3498db)
+          .addFields(
+            { name: "Member", value: `<@${data.target.id}>`, inline: true },
+            {
+              name: "Updated by",
+              value: `<@${data.executor.id}>`,
+              inline: true,
+            }
+          );
+
+        if (data.changes?.length) {
+          embed.addFields({ name: "Changes", value: data.changes.join("\n") });
+        }
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
+        break;
+
       case AuditLogEvent.ChannelCreate:
         embed
           .setTitle("Channel Created")
           .setColor(0x57f287)
           .addFields(
-            { name: "Channel", value: `${log.target}`, inline: true },
-            { name: "Created by", value: `${log.executor}`, inline: true },
-            { name: "Type", value: `${log.target.type}`, inline: true }
+            { name: "Channel", value: `${data.target}`, inline: true },
+            { name: "Created by", value: `${data.executor}`, inline: true },
+            { name: "Type", value: `${data.target.type}`, inline: true }
           );
         break;
 
@@ -34,8 +52,8 @@ export default async (client, guild) => {
           .setTitle("Channel Deleted")
           .setColor(0xed4245)
           .addFields(
-            { name: "Channel", value: log.changes[0].old, inline: true },
-            { name: "Deleted by", value: `${log.executor}`, inline: true }
+            { name: "Channel", value: data.changes[0].old, inline: true },
+            { name: "Deleted by", value: `${data.executor}`, inline: true }
           );
         break;
 
@@ -44,8 +62,8 @@ export default async (client, guild) => {
           .setTitle("Role Created")
           .setColor(0x57f287)
           .addFields(
-            { name: "Role", value: `${log.target}`, inline: true },
-            { name: "Created by", value: `${log.executor}`, inline: true }
+            { name: "Role", value: `${data.target}`, inline: true },
+            { name: "Created by", value: `${data.executor}`, inline: true }
           );
         break;
 
@@ -54,8 +72,8 @@ export default async (client, guild) => {
           .setTitle("Role Deleted")
           .setColor(0xed4245)
           .addFields(
-            { name: "Role", value: log.changes[0].old, inline: true },
-            { name: "Deleted by", value: `${log.executor}`, inline: true }
+            { name: "Role", value: data.changes[0].old, inline: true },
+            { name: "Deleted by", value: `${data.executor}`, inline: true }
           );
         break;
 
@@ -64,11 +82,11 @@ export default async (client, guild) => {
           .setTitle("Member Kicked")
           .setColor(0xed4245)
           .addFields(
-            { name: "Member", value: `${log.target}`, inline: true },
-            { name: "Kicked by", value: `${log.executor}`, inline: true },
+            { name: "Member", value: `${data.target}`, inline: true },
+            { name: "Kicked by", value: `${data.executor}`, inline: true },
             {
               name: "Reason",
-              value: log.reason || "No reason provided",
+              value: data.reason || "No reason provided",
               inline: true,
             }
           );
@@ -79,11 +97,11 @@ export default async (client, guild) => {
           .setTitle("Member Banned")
           .setColor(0xed4245)
           .addFields(
-            { name: "Member", value: `${log.target}`, inline: true },
-            { name: "Banned by", value: `${log.executor}`, inline: true },
+            { name: "Member", value: `${data.target}`, inline: true },
+            { name: "Banned by", value: `${data.executor}`, inline: true },
             {
               name: "Reason",
-              value: log.reason || "No reason provided",
+              value: data.reason || "No reason provided",
               inline: true,
             }
           );
@@ -94,23 +112,250 @@ export default async (client, guild) => {
           .setTitle("Member Unbanned")
           .setColor(0x57f287)
           .addFields(
-            { name: "Member", value: `${log.target}`, inline: true },
-            { name: "Unbanned by", value: `${log.executor}`, inline: true }
+            { name: "Member", value: `${data.target}`, inline: true },
+            { name: "Unbanned by", value: `${data.executor}`, inline: true }
           );
         break;
 
-      case AuditLogEvent.MemberUpdate:
-        const changes = log.changes
-          .map((c) => `${c.key}: ${c.old} → ${c.new}`)
-          .join("\n");
+      case AuditLogEvent.MessageDelete:
         embed
-          .setTitle("Member Updated")
+          .setTitle("Message Deleted")
+          .setColor(0xed4245)
+          .addFields(
+            { name: "Author", value: `<@${data.target.id}>`, inline: true },
+            {
+              name: "Deleted by",
+              value: `<@${data.executor.id}>`,
+              inline: true,
+            },
+            {
+              name: "Channel",
+              value: `<#${data.changes[0].channel.id}>`,
+              inline: true,
+            },
+            { name: "Content", value: data.changes[0].content },
+            { name: "Attachments", value: data.changes[0].attachments }
+          );
+        break;
+
+      case AuditLogEvent.MessageBulkDelete:
+        embed
+          .setTitle("Messages Bulk Deleted")
+          .setColor(0xed4245)
+          .addFields(
+            {
+              name: "Channel",
+              value: `<#${data.changes[0].channel.id}>`,
+              inline: true,
+            },
+            {
+              name: "Deleted by",
+              value: `<@${data.executor.id}>`,
+              inline: true,
+            },
+            {
+              name: "Count",
+              value: `${data.changes[0].count} messages`,
+              inline: true,
+            }
+          );
+
+        const messageList = data.changes[0].messages
+          .map(
+            (m) =>
+              `${m.author}: ${m.content} ${m.attachments !== "None" ? `[${m.attachments}]` : ""}`
+          )
+          .join("\n")
+          .slice(0, 1024);
+
+        embed.addFields({
+          name: "Messages",
+          value:
+            messageList.length === 1024 ? `${messageList}...` : messageList,
+        });
+        break;
+
+      case AuditLogEvent.ChannelUpdate:
+        embed
+          .setTitle("Channel Updated")
           .setColor(0x3498db)
           .addFields(
-            { name: "Member", value: `${log.target}`, inline: true },
-            { name: "Updated by", value: `${log.executor}`, inline: true },
-            { name: "Changes", value: changes }
+            { name: "Channel", value: `<#${data.target.id}>`, inline: true },
+            {
+              name: "Updated by",
+              value: `<@${data.executor.id}>`,
+              inline: true,
+            }
           );
+
+        if (data.changes?.length) {
+          embed.addFields({ name: "Changes", value: data.changes.join("\n") });
+        }
+        break;
+
+      case AuditLogEvent.RoleUpdate:
+        embed
+          .setTitle("Role Updated")
+          .setColor(0x3498db)
+          .addFields(
+            { name: "Role", value: `<@&${data.target.id}>`, inline: true },
+            {
+              name: "Updated by",
+              value: `<@${data.executor.id}>`,
+              inline: true,
+            }
+          );
+
+        if (data.changes?.length) {
+          embed.addFields({ name: "Changes", value: data.changes.join("\n") });
+        }
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
+        break;
+
+      case AuditLogEvent.MemberTimeout:
+        embed
+          .setTitle("Member Timed Out")
+          .setColor(0xed4245)
+          .addFields(
+            { name: "Member", value: `<@${data.target.id}>`, inline: true },
+            { name: "Moderator", value: `<@${data.executor.id}>`, inline: true }
+          );
+
+        if (data.changes?.length) {
+          embed.addFields({ name: "Duration", value: data.changes.join("\n") });
+        }
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
+        break;
+
+      case "COMMAND_NUKE":
+        embed
+          .setTitle("Channel Nuked")
+          .setColor(0xed4245)
+          .addFields(
+            { name: "Channel", value: `<#${data.target.id}>`, inline: true },
+            {
+              name: "Moderator",
+              value: `<@${data.executor.id}>`,
+              inline: true,
+            },
+            {
+              name: "Messages Deleted",
+              value: `${data.count || "Unknown"}`,
+              inline: true,
+            }
+          );
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
+        break;
+
+      case "COMMAND_TIMEOUT":
+        embed
+          .setTitle(
+            data.type === "untimeout"
+              ? "Member Timeout Removed"
+              : "Member Timed Out"
+          )
+          .setColor(data.type === "untimeout" ? 0x57f287 : 0xed4245)
+          .addFields(
+            { name: "Member", value: `<@${data.target.id}>`, inline: true },
+            { name: "Moderator", value: `<@${data.executor.id}>`, inline: true }
+          );
+
+        if (data.type !== "untimeout") {
+          embed.addFields({
+            name: "Duration",
+            value: data.duration,
+            inline: true,
+          });
+        }
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
+        break;
+
+      case "COMMAND_UNTIMEOUT":
+        embed
+          .setTitle("Member Timeout Removed")
+          .setColor(0x57f287)
+          .addFields(
+            { name: "Member", value: `<@${data.target.id}>`, inline: true },
+            { name: "Moderator", value: `<@${data.executor.id}>`, inline: true }
+          );
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
+        break;
+
+      case "COMMAND_JAIL":
+        embed
+          .setTitle(
+            data.type === "unjail" ? "Member Unjailed" : "Member Jailed"
+          )
+          .setColor(data.type === "unjail" ? 0x57f287 : 0xed4245)
+          .addFields(
+            { name: "Member", value: `<@${data.target.id}>`, inline: true },
+            { name: "Moderator", value: `<@${data.executor.id}>`, inline: true }
+          );
+
+        if (data.duration && data.type !== "unjail") {
+          embed.addFields({
+            name: "Duration",
+            value: data.duration,
+            inline: true,
+          });
+        }
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
+        break;
+
+      case "COMMAND_CLEARINFRACTIONS":
+        embed
+          .setTitle("Infractions Cleared")
+          .setColor(0x57f287)
+          .addFields(
+            { name: "Target", value: `<@${data.target.id}>`, inline: true },
+            { name: "Moderator", value: `<@${data.executor.id}>`, inline: true }
+          );
+        break;
+
+      case "COMMAND_LOGS":
+        embed
+          .setTitle("Logs Checked")
+          .setColor(0x3498db)
+          .addFields(
+            { name: "Target", value: `<@${data.target.id}>`, inline: true },
+            {
+              name: "Checked by",
+              value: `<@${data.executor.id}>`,
+              inline: true,
+            }
+          );
+        break;
+
+      case "COMMAND_WARN":
+        embed
+          .setTitle("Member Warned")
+          .setColor(0xffd700)
+          .addFields(
+            { name: "Member", value: `<@${data.target.id}>`, inline: true },
+            { name: "Moderator", value: `<@${data.executor.id}>`, inline: true }
+          );
+
+        if (data.reason) {
+          embed.addFields({ name: "Reason", value: data.reason, inline: true });
+        }
         break;
     }
 

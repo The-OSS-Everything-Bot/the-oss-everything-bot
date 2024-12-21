@@ -1,5 +1,6 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getUser, updateUserLogs } from "../../schemas/user.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -41,6 +42,16 @@ export default {
         }
       }
 
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_CLEARINFRACTIONS",
+        {
+          target: user,
+          executor: interaction.user,
+        }
+      );
+
       await interaction.reply(`Cleared all infractions for <@${user.id}>`);
     } catch (error) {
       console.error(error);
@@ -73,6 +84,16 @@ export default {
           await updateUserLogs(user.id, message.guildId, action, []);
         }
       }
+
+      await handleServerLogs(
+        message.client,
+        message.guild,
+        "COMMAND_CLEARINFRACTIONS",
+        {
+          target: user,
+          executor: message.author,
+        }
+      );
 
       await message.reply(`Cleared all infractions for <@${user.id}>`);
     } catch (error) {

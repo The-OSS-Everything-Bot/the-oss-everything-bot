@@ -1,5 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { getUser } from "../../schemas/user.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -52,20 +53,51 @@ export default {
     const addLogsToEmbed = (actionType, logs) => {
       if (!logs?.length) return;
 
-      embed.addFields({
-        name: actionType.charAt(0).toUpperCase() + actionType.slice(1),
-        value: logs
-          .map(
-            ({ reason, by, createdAt }) =>
-              `**By:** <@${by}>\n**Reason:** ${reason}\n**Date:** ${new Date(createdAt).toLocaleString()}`
-          )
-          .join("\n\n"),
+      const chunks = [];
+      let currentChunk = [];
+      let currentLength = 0;
+
+      logs.forEach((log) => {
+        const logEntry = `**By:** <@${log.by}>\n**Reason:** ${log.reason}\n**Date:** ${new Date(log.createdAt).toLocaleString()}\n\n`;
+
+        if (currentLength + logEntry.length > 1000) {
+          chunks.push(currentChunk.join(""));
+          currentChunk = [logEntry];
+          currentLength = logEntry.length;
+        } else {
+          currentChunk.push(logEntry);
+          currentLength += logEntry.length;
+        }
+      });
+
+      if (currentChunk.length) {
+        chunks.push(currentChunk.join(""));
+      }
+
+      chunks.forEach((chunk, index) => {
+        embed.addFields({
+          name:
+            index === 0
+              ? actionType.charAt(0).toUpperCase() + actionType.slice(1)
+              : `${actionType} (continued)`,
+          value: chunk,
+        });
       });
     };
 
     ["warns", "bans", "kicks", "timeouts", "jails"].forEach((actionType) => {
       addLogsToEmbed(actionType, userData[actionType]);
     });
+
+    await handleServerLogs(
+      interaction.client,
+      interaction.guild,
+      "COMMAND_LOGS",
+      {
+        target: user,
+        executor: interaction.user,
+      }
+    );
 
     return interaction.reply({ embeds: [embed] });
   },
@@ -106,19 +138,45 @@ export default {
       const addLogsToEmbed = (actionType, logs) => {
         if (!logs?.length) return;
 
-        embed.addFields({
-          name: actionType.charAt(0).toUpperCase() + actionType.slice(1),
-          value: logs
-            .map(
-              ({ reason, by, createdAt }) =>
-                `**By:** <@${by}>\n**Reason:** ${reason}\n**Date:** ${new Date(createdAt).toLocaleString()}`
-            )
-            .join("\n\n"),
+        const chunks = [];
+        let currentChunk = [];
+        let currentLength = 0;
+
+        logs.forEach((log) => {
+          const logEntry = `**By:** <@${log.by}>\n**Reason:** ${log.reason}\n**Date:** ${new Date(log.createdAt).toLocaleString()}\n\n`;
+
+          if (currentLength + logEntry.length > 1000) {
+            chunks.push(currentChunk.join(""));
+            currentChunk = [logEntry];
+            currentLength = logEntry.length;
+          } else {
+            currentChunk.push(logEntry);
+            currentLength += logEntry.length;
+          }
+        });
+
+        if (currentChunk.length) {
+          chunks.push(currentChunk.join(""));
+        }
+
+        chunks.forEach((chunk, index) => {
+          embed.addFields({
+            name:
+              index === 0
+                ? actionType.charAt(0).toUpperCase() + actionType.slice(1)
+                : `${actionType} (continued)`,
+            value: chunk,
+          });
         });
       };
 
       ["warns", "bans", "kicks", "timeouts", "jails"].forEach((actionType) => {
         addLogsToEmbed(actionType, userData[actionType]);
+      });
+
+      await handleServerLogs(message.client, message.guild, "COMMAND_LOGS", {
+        target: user,
+        executor: message.author,
       });
 
       return message.reply({ embeds: [embed] });

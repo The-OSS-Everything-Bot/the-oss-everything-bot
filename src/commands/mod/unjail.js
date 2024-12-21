@@ -1,5 +1,6 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getUser, updateUserLogs } from "../../schemas/user.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -74,6 +75,10 @@ export default {
       });
 
       await updateUserLogs(targetUser.id, interaction.guildId, "jails", jails);
+      await handleServerLogs(
+        interaction.guildId,
+        `Unjailed <@${targetUser.id}>`
+      );
       await interaction.reply(`Unjailed <@${targetUser.id}>`);
     } catch (error) {
       console.error(error);
@@ -126,6 +131,13 @@ export default {
       });
 
       await updateUserLogs(targetUser.id, message.guildId, "jails", jails);
+      await handleServerLogs(message.guildId, `Unjailed <@${targetUser.id}>`);
+      await handleServerLogs(message.client, message.guild, "COMMAND_JAIL", {
+        target: targetUser,
+        executor: message.author,
+        type: "unjail",
+        reason: "Unjailed",
+      });
       await message.reply(`Unjailed <@${targetUser.id}>`);
     } catch (error) {
       console.error(error);
