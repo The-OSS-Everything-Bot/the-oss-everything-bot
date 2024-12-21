@@ -2,11 +2,8 @@
 
 <h1 align="center">The OSS Everything Bot</h1>
 
-> [!WARNING]
-> **Not ready for production use. Join [AWFixer and Friends](https://discord.gg/awfixer) for updates.**
-
-> [!caution] Bot is under active, early, development
-> *This bot will take a lot of work, and is getting updates multible times a day. if interested then please join the [AWFixer and Friends Discord](https://discord.gg/awfixer)
+> [!WARNING]  
+> This bot is under active, early development. Updates are pushed multiple times per day. If you're interested in contributing or following progress, join the [AWFixer and Friends Discord](https://discord.gg/awfixer).
 ## About
 An open-source Discord bot that aims to do everything, built by the community for the community.
 

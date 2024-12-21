@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -38,6 +39,17 @@ export default {
       });
 
       await channel.delete();
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_NUKE",
+        {
+          target: channel,
+          executor: interaction.user,
+          count: messages?.size || 0,
+          reason: "Channel nuked via command",
+        }
+      );
       await newChannel.send(
         "https://media1.tenor.com/m/kswttEEUhMQAAAAd/suma.gif"
       );
@@ -52,7 +64,9 @@ export default {
 
   async prefixExecute(message) {
     if (!message.member.permissions.has([PermissionFlagsBits.ManageChannels]))
-      return message.reply("You don't have permission to use this command");
+      return await message.channel.send(
+        "You don't have permission to use this command"
+      );
 
     const channel = message.channel;
     const position = channel.position;
@@ -75,12 +89,18 @@ export default {
       });
 
       await channel.delete();
+      await handleServerLogs(message.client, message.guild, "COMMAND_NUKE", {
+        target: channel,
+        executor: message.author,
+        count: 0,
+        reason: "Channel nuked via command",
+      });
       await newChannel.send(
         "https://media1.tenor.com/m/kswttEEUhMQAAAAd/suma.gif"
       );
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at nuke.js`);
-      await message.reply("An error occurred while nuking the channel");
+      await message.channel.send("An error occurred while nuking the channel");
     }
   },
 };
