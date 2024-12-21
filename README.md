@@ -5,8 +5,8 @@
 > [!WARNING]
 > **Not ready for production use. Join [AWFixer and Friends](https://discord.gg/awfixer) for updates.**
 
-> [!caution] Bot is under active, early, development
-> *This bot will take a lot of work, and is getting updates multible times a day. if interested then please join the [AWFixer and Friends Discord](https://discord.gg/awfixer)
+> [!WARNING] Bot is under active, early, development
+> This bot will take a lot of work, and is getting updates multiple times a day. if interested please join the [AWFixer and Friends Discord](https://discord.gg/awfixer)
 ## About
 An open-source Discord bot that aims to do everything, built by the community for the community.
 
