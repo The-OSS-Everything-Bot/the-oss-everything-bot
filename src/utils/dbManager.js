@@ -98,6 +98,17 @@ async function initGuildDB(db) {
   `);
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      guild_id TEXT,
+      user_id TEXT,
+      prefix TEXT,
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      PRIMARY KEY (guild_id, user_id)
+    )
+  `);
+
+  await db.execute(`
     CREATE INDEX IF NOT EXISTS idx_guild_settings_guild_id 
     ON guild_settings(guild_id)
   `);
@@ -181,4 +192,22 @@ export async function getUserRoles(userId, guildId) {
     await global.redis.set(cacheKey, JSON.stringify(roles));
   }
   return roles;
+}
+
+export async function getUserPrefix(userId, guildId) {
+  const cacheKey = `user:${guildId}:${userId}:prefix`;
+  const cached = await global.redis.get(cacheKey);
+  if (cached) return cached;
+
+  const guildDB = await getGuildDB(guildId);
+  const result = await guildDB.execute({
+    sql: "SELECT prefix FROM user_settings WHERE guild_id = ? AND user_id = ?",
+    args: [guildId, userId],
+  });
+
+  const prefix = result.rows[0]?.prefix;
+  if (prefix) {
+    await global.redis.set(cacheKey, prefix);
+  }
+  return prefix;
 }
