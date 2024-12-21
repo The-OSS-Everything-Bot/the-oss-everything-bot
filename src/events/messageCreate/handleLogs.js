@@ -298,9 +298,10 @@ export default async (client, message) => {
       return;
     }
 
-    const containsFilteredWord = FILTERED_WORDS.some((word) =>
-      message.content.toLowerCase().includes(word.toLowerCase())
-    );
+    const containsFilteredWord =
+      FILTERED_WORDS.some((word) =>
+        message.content.toLowerCase().includes(word.toLowerCase())
+      ) && !message.content.startsWith("%");
 
     if (containsFilteredWord) {
       console.log("[Debug] Filtered word detected, sending log");

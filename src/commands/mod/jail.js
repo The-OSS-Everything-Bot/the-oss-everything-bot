@@ -1,6 +1,7 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import { saveUserRoles } from "../../utils/dbManager.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -133,6 +134,18 @@ export default {
         );
       }
 
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_JAIL",
+        {
+          target: targetUser,
+          executor: interaction.user,
+          duration: duration || "Permanent",
+          reason,
+        }
+      );
+
       await interaction.reply(`Jailed ${member}`);
 
       if (duration) {
@@ -251,6 +264,13 @@ export default {
       } else {
         await updateUserLogs(targetUser.id, message.guildId, "jails", jails);
       }
+
+      await handleServerLogs(message.client, message.guild, "COMMAND_JAIL", {
+        target: targetUser,
+        executor: message.author,
+        duration: duration || "Permanent",
+        reason,
+      });
 
       await message.reply(`Jailed ${member}`);
 

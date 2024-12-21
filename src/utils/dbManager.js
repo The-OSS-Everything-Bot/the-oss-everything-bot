@@ -33,19 +33,29 @@ export async function getGuildDB(guildId) {
 
 async function migrateDB(db) {
   try {
-    const columns = await db.execute("PRAGMA table_info(users)");
-    const existingColumns = new Set(columns.rows.map((row) => row.name));
-
-    const requiredColumns = {
-      bans: "TEXT NOT NULL DEFAULT '[]'",
-      kicks: "TEXT NOT NULL DEFAULT '[]'",
-      timeouts: "TEXT NOT NULL DEFAULT '[]'",
-      jails: "TEXT NOT NULL DEFAULT '[]'",
+    const tables = {
+      users: {
+        bans: "TEXT NOT NULL DEFAULT '[]'",
+        kicks: "TEXT NOT NULL DEFAULT '[]'",
+        timeouts: "TEXT NOT NULL DEFAULT '[]'",
+        jails: "TEXT NOT NULL DEFAULT '[]'",
+      },
+      guild_settings: {
+        antiraid_enabled: "INTEGER DEFAULT 0",
+        antiraid_jail_channel: "TEXT",
+        antiraid_msg_threshold: "INTEGER DEFAULT 5",
+        antiraid_time_window: "INTEGER DEFAULT 5",
+      },
     };
 
-    for (const [column, type] of Object.entries(requiredColumns)) {
-      if (!existingColumns.has(column)) {
-        await db.execute(`ALTER TABLE users ADD COLUMN ${column} ${type}`);
+    for (const [table, columns] of Object.entries(tables)) {
+      const tableInfo = await db.execute(`PRAGMA table_info(${table})`);
+      const existingColumns = new Set(tableInfo.rows.map((row) => row.name));
+
+      for (const [column, type] of Object.entries(columns)) {
+        if (!existingColumns.has(column)) {
+          await db.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+        }
       }
     }
   } catch (error) {
@@ -71,6 +81,11 @@ async function initGuildDB(db) {
     CREATE TABLE IF NOT EXISTS guild_settings (
       guild_id TEXT PRIMARY KEY,
       log_channel_id TEXT,
+      prefix TEXT,
+      antiraid_enabled INTEGER DEFAULT 0,
+      antiraid_jail_channel TEXT,
+      antiraid_msg_threshold INTEGER DEFAULT 5,
+      antiraid_time_window INTEGER DEFAULT 5,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
     )
@@ -94,6 +109,17 @@ async function initGuildDB(db) {
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       PRIMARY KEY (user_id, guild_id)
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      guild_id TEXT,
+      user_id TEXT,
+      prefix TEXT,
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      PRIMARY KEY (guild_id, user_id)
     )
   `);
 
@@ -181,4 +207,22 @@ export async function getUserRoles(userId, guildId) {
     await global.redis.set(cacheKey, JSON.stringify(roles));
   }
   return roles;
+}
+
+export async function getUserPrefix(userId, guildId) {
+  const cacheKey = `user:${guildId}:${userId}:prefix`;
+  const cached = await global.redis.get(cacheKey);
+  if (cached) return cached;
+
+  const guildDB = await getGuildDB(guildId);
+  const result = await guildDB.execute({
+    sql: "SELECT prefix FROM user_settings WHERE guild_id = ? AND user_id = ?",
+    args: [guildId, userId],
+  });
+
+  const prefix = result.rows[0]?.prefix;
+  if (prefix) {
+    await global.redis.set(cacheKey, prefix);
+  }
+  return prefix;
 }
