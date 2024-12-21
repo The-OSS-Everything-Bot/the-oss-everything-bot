@@ -170,12 +170,30 @@ export default {
       ),
     };
 
+    const getCommandSyntax = (cmd) => {
+      const options = cmd.data.options || [];
+      const requiredOptions = options
+        .filter((opt) => opt.required)
+        .map((opt) => `<${opt.name}>`)
+        .join(" ");
+      const optionalOptions = options
+        .filter((opt) => !opt.required)
+        .map((opt) => `[${opt.name}]`)
+        .join(" ");
+
+      return `%${cmd.data.name} ${requiredOptions} ${optionalOptions}`.trim();
+    };
+
     const pages = Object.entries(categories)
       .filter(([cmds]) => cmds.length > 0)
       .map(([category, cmds], index, array) => {
         const description = cmds
-          .map((cmd) => `**%${cmd.data.name}**\n${cmd.data.description}`)
+          .map((cmd) => {
+            const syntax = getCommandSyntax(cmd);
+            return `**${syntax}**\n${cmd.data.description}`;
+          })
           .join("\n\n");
+
         return new EmbedBuilder()
           .setTitle(
             `${category.charAt(0).toUpperCase() + category.slice(1)} Commands`
@@ -189,77 +207,60 @@ export default {
       });
 
     if (pages.length === 0) {
-      return await message.reply("No commands available.");
+      return message.reply("No commands found");
     }
 
     let currentPage = 0;
-
-    const getRow = (page) => {
-      return new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("prev")
-          .setLabel("◀")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId("next")
-          .setLabel("▶")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === pages.length - 1)
-      );
-    };
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("prev")
+        .setLabel("◀")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId("next")
+        .setLabel("▶")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(pages.length === 1)
+    );
 
     const response = await message.reply({
-      embeds: [pages[currentPage]],
-      components: pages.length > 1 ? [getRow(currentPage)] : [],
-      fetchReply: true,
+      embeds: [pages[0]],
+      components: pages.length > 1 ? [row] : [],
     });
 
-    if (pages.length <= 1) return;
-
-    const collector = response.createMessageComponentCollector({
-      time: 300000,
-    });
-
-    collector.on("collect", async (i) => {
-      if (i.user.id !== message.author.id) {
-        await i.reply({
-          content: "Only the command user can navigate pages",
-          ephemeral: true,
-        });
-        return;
-      }
-
-      currentPage =
-        i.customId === "prev"
-          ? Math.max(0, currentPage - 1)
-          : Math.min(pages.length - 1, currentPage + 1);
-
-      await response.edit({
-        embeds: [pages[currentPage]],
-        components: [getRow(currentPage)],
+    if (pages.length > 1) {
+      const collector = response.createMessageComponentCollector({
+        time: 60000,
       });
 
-      await i.deferUpdate().catch(() => null);
-    });
+      collector.on("collect", async (i) => {
+        if (i.user.id !== message.author.id) {
+          return i.reply({
+            content: "You cannot use these buttons",
+            ephemeral: true,
+          });
+        }
 
-    collector.on("end", () => {
-      if (!response.editable) return;
+        if (i.customId === "prev" && currentPage > 0) {
+          currentPage--;
+        } else if (i.customId === "next" && currentPage < pages.length - 1) {
+          currentPage++;
+        }
 
-      const disabledRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("prev")
-          .setLabel("◀")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId("next")
-          .setLabel("▶")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(true)
-      );
+        row.components[0].setDisabled(currentPage === 0);
+        row.components[1].setDisabled(currentPage === pages.length - 1);
 
-      response.edit({ components: [disabledRow] }).catch(() => null);
-    });
+        await i.update({
+          embeds: [pages[currentPage]],
+          components: [row],
+        });
+      });
+
+      collector.on("end", () => {
+        row.components.forEach((button) => button.setDisabled(true));
+        response.edit({ components: [row] }).catch(() => null);
+      });
+    }
   },
 };
