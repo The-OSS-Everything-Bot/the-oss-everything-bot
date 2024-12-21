@@ -2,6 +2,8 @@ import { AuditLogEvent } from "discord.js";
 import handleServerLogs from "../serverEvents/handleServerLogs.js";
 
 export default async (client, oldRole, newRole) => {
+  if (!oldRole?.guild || !newRole?.guild) return;
+
   const changes = [];
   const auditLogs = await newRole.guild.fetchAuditLogs({
     limit: 1,
