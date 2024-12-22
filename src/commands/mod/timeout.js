@@ -165,9 +165,7 @@ export default {
       if (!member) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setDescription(
-            `Could not find user <@${userId}> in this server`
-          );
+          .setDescription(`Could not find user <@${userId}> in this server`);
         return message.reply({ embeds: [embed] });
       }
 
