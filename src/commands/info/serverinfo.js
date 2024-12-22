@@ -38,6 +38,12 @@ export default {
       (Date.now() - createdDate) / (1000 * 60 * 60 * 24 * 30)
     );
 
+    const designValue = [
+      `Splash: ${guild.splash ? `[Click here](${guild.splashURL({ size: 4096 })})` : "None"}`,
+      `Banner: ${guild.banner ? `[Click here](${guild.bannerURL({ size: 4096 })})` : "None"}`,
+      `Icon: ${guild.icon ? `[Click here](${guild.iconURL({ size: 4096, dynamic: true })})` : "None"}`,
+    ].join("\n");
+
     const embed = new EmbedBuilder()
       .setAuthor({
         name: guild.name,
@@ -64,7 +70,7 @@ export default {
         },
         {
           name: "Design",
-          value: `Splash: ${guild.splash ? "Click here" : "None"}\nBanner: ${guild.banner ? "Click here" : "None"}\nIcon: ${guild.icon ? "Click here" : "None"}`,
+          value: designValue,
           inline: true,
         },
         {
@@ -121,6 +127,12 @@ export default {
       (Date.now() - createdDate) / (1000 * 60 * 60 * 24 * 30)
     );
 
+    const designValue = [
+      `Splash: ${guild.splash ? `[Click here](${guild.splashURL({ size: 4096 })})` : "None"}`,
+      `Banner: ${guild.banner ? `[Click here](${guild.bannerURL({ size: 4096 })})` : "None"}`,
+      `Icon: ${guild.icon ? `[Click here](${guild.iconURL({ size: 4096, dynamic: true })})` : "None"}`,
+    ].join("\n");
+
     const embed = new EmbedBuilder()
       .setAuthor({
         name: guild.name,
@@ -147,7 +159,7 @@ export default {
         },
         {
           name: "Design",
-          value: `Splash: ${guild.splash ? "Click here" : "None"}\nBanner: ${guild.banner ? "Click here" : "None"}\nIcon: ${guild.icon ? "Click here" : "None"}`,
+          value: designValue,
           inline: true,
         },
         {
