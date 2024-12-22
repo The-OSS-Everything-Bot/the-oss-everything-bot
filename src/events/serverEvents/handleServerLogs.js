@@ -6,7 +6,14 @@ export default async (client, guild, eventType, data = {}) => {
     const settings = await getGuildSettings(guild.id);
     if (!settings?.log_channel_id) return;
 
-    const logsChannel = await client.channels.fetch(settings.log_channel_id);
+    let logsChannel;
+    try {
+      logsChannel = await client.channels.fetch(settings.log_channel_id);
+    } catch (err) {
+      console.error("[Error] Failed to fetch logs channel:", err);
+      return;
+    }
+
     if (!logsChannel) return;
 
     const embed = new EmbedBuilder()
@@ -359,7 +366,12 @@ export default async (client, guild, eventType, data = {}) => {
         break;
     }
 
-    await logsChannel.send({ embeds: [embed] });
+    try {
+      await logsChannel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error("[Error] Failed to send log message:", err);
+      return;
+    }
   } catch (error) {
     console.error("[Error] Server logs failed:", error);
   }
