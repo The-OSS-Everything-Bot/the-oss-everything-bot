@@ -54,7 +54,7 @@ export default {
         },
         {
           name: "Owner",
-          value: `${owner.user.tag}`,
+          value: `<@${owner.user.id}>`,
           inline: true,
         },
         {
@@ -137,7 +137,7 @@ export default {
         },
         {
           name: "Owner",
-          value: `${owner.user.tag}`,
+          value: `<@${owner.user.id}>`,
           inline: true,
         },
         {

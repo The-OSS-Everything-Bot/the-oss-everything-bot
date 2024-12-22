@@ -38,7 +38,7 @@ export default {
       if (!userData) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setDescription(`No moderation logs found for ${user.tag}`);
+          .setDescription(`No moderation logs found for <@${user.id}>`);
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 
@@ -49,12 +49,12 @@ export default {
       if (!hasLogs) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setDescription(`No moderation logs found for ${user.tag}`);
+          .setDescription(`No moderation logs found for <@${user.id}>`);
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 
       const embed = new EmbedBuilder()
-        .setTitle(`Moderation Logs for ${user.tag}`)
+        .setTitle(`Moderation Logs for <@${user.id}>`)
         .setAuthor({
           name: `ID: ${user.id}`,
           iconURL: user.displayAvatarURL(),
@@ -149,7 +149,7 @@ export default {
       if (!userData) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setDescription(`No moderation logs found for ${user.tag}`);
+          .setDescription(`No moderation logs found for <@${user.id}>`);
         return message.reply({ embeds: [embed] });
       }
 
@@ -160,12 +160,12 @@ export default {
       if (!hasLogs) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setDescription(`No moderation logs found for ${user.tag}`);
+          .setDescription(`No moderation logs found for <@${user.id}>`);
         return message.reply({ embeds: [embed] });
       }
 
       const embed = new EmbedBuilder()
-        .setTitle(`Moderation Logs for ${user.tag}`)
+        .setTitle(`Moderation Logs for <@${user.id}>`)
         .setAuthor({
           name: `ID: ${user.id}`,
           iconURL: user.displayAvatarURL(),

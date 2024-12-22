@@ -36,7 +36,7 @@ export default {
       if (!member) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setDescription(`Could not find user ${user.tag} in this server`);
+          .setDescription(`Could not find user <@${user.id}> in this server`);
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 

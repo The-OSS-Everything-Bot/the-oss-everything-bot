@@ -66,7 +66,7 @@ export default {
 
       const embed = new EmbedBuilder()
         .setColor(0x57f287)
-        .setDescription(`Successfully banned ${user.tag}`);
+        .setDescription(`Successfully banned <@${user.id}>`);
       await interaction.reply({ embeds: [embed] });
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at ban.js`);
@@ -123,7 +123,7 @@ export default {
 
       const embed = new EmbedBuilder()
         .setColor(0x57f287)
-        .setDescription(`Successfully banned ${user.tag}`);
+        .setDescription(`Successfully banned <@${user.id}>`);
       await message.reply({ embeds: [embed] });
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at ban.js`);
