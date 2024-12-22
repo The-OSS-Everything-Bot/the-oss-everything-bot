@@ -18,11 +18,12 @@ export default async (client, message) => {
       if (settings.prefix) prefix = settings.prefix;
     } else {
       const guildDB = await getGuildDB(message.guildId);
-      const [settings] = await guildDB.execute({
+      const result = await guildDB.execute({
         sql: "SELECT prefix FROM guild_settings WHERE guild_id = ?",
         args: [message.guildId],
       });
 
+      const settings = result.rows[0];
       if (settings?.prefix) {
         prefix = settings.prefix;
         await global.redis.set(cacheKey, JSON.stringify({ prefix }));
