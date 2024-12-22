@@ -1,0 +1,9 @@
+CONTAINER ID   IMAGE                           COMMAND                  CREATED       STATUS                   PORTS                                       NAMES
+4c2a8cb6e89a   229fffb5a6bc                    "/docker-entrypoint.…"   4 hours ago   Up 4 hours               80/tcp                                      quirky_snyder
+752d87acfc85   cloudflare/cloudflared:latest   "cloudflared --no-au…"   4 hours ago   Up 4 hours                                                           festive_euclid
+a394dcd08f00   corentinth/it-tools             "/docker-entrypoint.…"   4 hours ago   Up 4 hours               0.0.0.0:8080->80/tcp, [::]:8080->80/tcp     recursing_driscoll
+c5746ebbdcb7   corentinth/it-tools             "/docker-entrypoint.…"   4 hours ago   Up 4 hours               80/tcp                                      exciting_turing
+ae9ddab16e00   the-oss-everything-bot-bot      "docker-entrypoint.s…"   4 hours ago   Exited (1) 4 hours ago                                               the-oss-everything-bot-bot-1
+d32463c6cdcb   redis:alpine                    "docker-entrypoint.s…"   5 hours ago   Up 5 hours               0.0.0.0:6379->6379/tcp, :::6379->6379/tcp   the-oss-everything-bot-redis-1
+946d86ae499e   corentinth/it-tools             "/docker-entrypoint.…"   7 hours ago   Exited (0) 7 hours ago                                               cool_newton
+961d0953bb01   hello-world                     "/hello"                 7 hours ago   Exited (0) 7 hours ago                                               laughing_elion
