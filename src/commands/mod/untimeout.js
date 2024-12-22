@@ -1,4 +1,8 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import {
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+  EmbedBuilder,
+} from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
@@ -18,11 +22,12 @@ export default {
   async execute(interaction) {
     if (
       !interaction.member.permissions.has([PermissionFlagsBits.ModerateMembers])
-    )
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
 
     try {
       const user = interaction.options.getMember("user");
@@ -30,10 +35,10 @@ export default {
       const member = await guild.members.fetch(user.id);
 
       if (!member) {
-        return await interaction.reply({
-          content: "User not found in this server",
-          ephemeral: true,
-        });
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(`Could not find user ${user.tag} in this server`);
+        return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 
       await member.timeout(null);
@@ -67,21 +72,35 @@ export default {
         await updateUserLogs(user.id, guild.id, "timeouts", timeouts);
       }
 
-      await interaction.reply(`Removed timeout from <@${user.id}>`);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Removed timeout from <@${user.id}>`);
+      await interaction.reply({ embeds: [embed] });
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at untimeout.js`);
-      await interaction.reply({
-        content: "An error occurred while removing the timeout",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to remove timeout: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ModerateMembers]))
-      return message.reply("You don't have permission to use this command");
+    if (
+      !message.member.permissions.has([PermissionFlagsBits.ModerateMembers])
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
-    if (!args.length) return message.reply("Please provide a user");
+    if (!args.length) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a user");
+      return message.reply({ embeds: [embed] });
+    }
 
     const userId = args[0].replace(/[<@!>]/g, "");
 
@@ -89,7 +108,14 @@ export default {
       const member = await message.guild.members
         .fetch(userId)
         .catch(() => null);
-      if (!member) return message.reply("User not found in this server");
+      if (!member) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(
+            `Could not find user with ID ${userId} in this server`
+          );
+        return message.reply({ embeds: [embed] });
+      }
 
       await member.timeout(null);
 
@@ -117,10 +143,16 @@ export default {
         await updateUserLogs(userId, message.guildId, "timeouts", timeouts);
       }
 
-      await message.reply(`Removed timeout from <@${userId}>`);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Removed timeout from <@${userId}>`);
+      await message.reply({ embeds: [embed] });
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at untimeout.js`);
-      await message.reply("An error occurred while removing the timeout");
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to remove timeout: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

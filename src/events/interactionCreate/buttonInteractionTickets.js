@@ -10,8 +10,11 @@ export default async (client, interaction) => {
         await interaction.deferReply({ ephemeral: true });
         const settings = await getGuildTickets(interaction.guildId);
         if (!settings?.category_id) {
+          const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription("Ticket system not configured");
           return await interaction.editReply({
-            content: "Ticket system not configured",
+            embeds: [embed],
             ephemeral: true,
           });
         }
@@ -77,7 +80,9 @@ export default async (client, interaction) => {
                 .setTitle("Ticket ID: " + channel.id)
                 .setDescription(
                   "Please describe the reasoning for opening this ticket.\n\nOur staff team will assist you as soon as possible. In the meantime, please provide as much detail as possible about your issue."
-                ),
+                )
+                .setColor(0x5865f2)
+                .setTimestamp(),
             ],
             components: [
               {
@@ -96,18 +101,24 @@ export default async (client, interaction) => {
           })
           .then((msg) => msg.pin());
 
+        const successEmbed = new EmbedBuilder()
+          .setColor(0x57f287)
+          .setDescription(`Ticket created in <#${channel.id}>`);
+
         await interaction.editReply({
-          content: "Ticket created",
+          embeds: [successEmbed],
           ephemeral: true,
         });
         break;
       }
 
       case "close ticket": {
-        await interaction.reply({
-          content: "Ticket will be closed in 3 seconds...",
-          ephemeral: false,
-        });
+        const closeEmbed = new EmbedBuilder()
+          .setColor(0xed4245)
+          .setDescription("Ticket will be closed in 3 seconds...")
+          .setTimestamp();
+
+        await interaction.reply({ embeds: [closeEmbed], ephemeral: false });
 
         const messages = await interaction.channel.messages.fetch({
           limit: 100,
@@ -157,19 +168,18 @@ export default async (client, interaction) => {
           }
         }
 
-        setTimeout(async () => {
-          await interaction.channel.delete();
-        }, 3000);
+        setTimeout(() => interaction.channel.delete(), 3000);
         break;
       }
     }
   } catch (error) {
-    console.error(`[Error] ${error}`);
-    await interaction
-      .reply({
-        content: "Something went wrong",
-        ephemeral: true,
-      })
-      .catch(() => {});
+    console.error(
+      "\x1b[31m",
+      `[Error] ${error} at buttonInteractionTickets.js`
+    );
+    const embed = new EmbedBuilder()
+      .setColor(0xff0000)
+      .setDescription(`Failed to process ticket action: ${error.message}`);
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   }
 };

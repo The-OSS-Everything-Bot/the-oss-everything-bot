@@ -1,10 +1,14 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  EmbedBuilder,
+} from "discord.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("kick")
-    .setDescription("Kicks a user")
+    .setDescription("Kicks a user from the server")
     .addUserOption((option) =>
       option
         .setName("user")
@@ -14,84 +18,120 @@ export default {
     .addStringOption((option) =>
       option
         .setName("reason")
-        .setDescription("The reason for the kick")
+        .setDescription("The reason for kicking")
         .setRequired(false)
     )
-    .setIntegrationTypes([0, 1])
-    .setContexts([0, 1]),
+    .setIntegrationTypes([0])
+    .setContexts([0]),
 
   async execute(interaction) {
-    if (!interaction.member.permissions.has([PermissionFlagsBits.KickMembers]))
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    if (
+      !interaction.member.permissions.has([PermissionFlagsBits.KickMembers])
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
 
     const user = interaction.options.getUser("user");
-    const reason = interaction.options.getString("reason") || "Not provided";
+    const reason =
+      interaction.options.getString("reason") || "No reason provided";
+    const member = await interaction.guild.members.fetch(user.id);
+
+    if (!member) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Could not find that user in this server");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    if (!member.kickable) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("I cannot kick this user");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
 
     try {
-      const guild = interaction.guild;
-      await guild.members.kick(user, reason);
+      await member.kick(reason);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Successfully kicked <@${user.id}>`);
+      await interaction.reply({ embeds: [embed] });
 
-      let userData = await getUser(user.id, guild.id);
-      let kicks = userData?.kicks || [];
-
-      kicks.push({
-        reason,
-        by: interaction.user.id,
-        createdAt: Date.now(),
-      });
-
-      if (!userData) {
-        await createUser(user.id, guild.id, { kicks });
-      } else {
-        await updateUserLogs(user.id, guild.id, "kicks", kicks);
-      }
-
-      await interaction.reply(`Kicked <@${user.id}>`);
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_KICK",
+        {
+          target: user,
+          executor: interaction.user,
+          reason,
+        }
+      );
     } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "An error occurred while kicking the user",
-        ephemeral: true,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at kick.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to kick user: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.KickMembers]))
-      return message.reply("You don't have permission to use this command");
+    if (!message.member.permissions.has([PermissionFlagsBits.KickMembers])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
     const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId) return message.reply("Please provide a user to kick");
+    if (!userId) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a user to kick");
+      return message.reply({ embeds: [embed] });
+    }
 
-    const reason = args.slice(1).join(" ") || "Not provided";
+    const reason = args.slice(1).join(" ") || "No reason provided";
 
     try {
       const user = await message.client.users.fetch(userId);
-      const guild = message.guild;
-      await guild.members.kick(user, reason);
+      const member = await message.guild.members.fetch(user.id);
 
-      let userData = await getUser(user.id, guild.id);
-      let kicks = userData?.kicks || [];
-
-      kicks.push({
-        reason,
-        by: message.author.id,
-        createdAt: Date.now(),
-      });
-
-      if (!userData) {
-        await createUser(user.id, guild.id, { kicks });
-      } else {
-        await updateUserLogs(user.id, guild.id, "kicks", kicks);
+      if (!member) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("Could not find that user in this server");
+        return message.reply({ embeds: [embed] });
       }
 
-      await message.reply(`Kicked <@${user.id}>`);
+      if (!member.kickable) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("I cannot kick this user");
+        return message.reply({ embeds: [embed] });
+      }
+
+      await member.kick(reason);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Successfully kicked <@${user.id}>`);
+      await message.reply({ embeds: [embed] });
+
+      await handleServerLogs(message.client, message.guild, "COMMAND_KICK", {
+        target: user,
+        executor: message.author,
+        reason,
+      });
     } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while kicking the user");
+      console.error("\x1b[31m", `[Error] ${error} at kick.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to kick user: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

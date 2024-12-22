@@ -1,4 +1,8 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import {
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+  EmbedBuilder,
+} from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import ms from "ms";
 import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
@@ -31,38 +35,41 @@ export default {
   async execute(interaction) {
     if (
       !interaction.member.permissions.has([PermissionFlagsBits.ModerateMembers])
-    )
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
 
     const user = interaction.options.getUser("user");
     const duration = interaction.options.getString("duration");
     const reason = interaction.options.getString("reason") || "Not provided";
 
     if (!duration.match(/^\d+[dhms]$/)) {
-      return await interaction.reply({
-        content: "Invalid duration format. Use s/m/h/d (e.g. 30s, 5m, 2h, 1d)",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          "Invalid duration format. Use s/m/h/d (e.g. 30s, 5m, 2h, 1d)"
+        );
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     const durationMs = ms(duration);
     if (!durationMs) {
-      return await interaction.reply({
-        content: "Invalid duration format",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Invalid duration format");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     try {
       const member = await interaction.guild.members.fetch(user.id);
       if (!member) {
-        return await interaction.reply({
-          content: "User not found in this server",
-          ephemeral: true,
-        });
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(`Could not find user ${user.tag} in this server`);
+        return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 
       await member.timeout(durationMs, reason);
@@ -100,41 +107,69 @@ export default {
         );
       }
 
-      await interaction.reply(`Timed out <@${user.id}> for ${duration}`);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Timed out <@${user.id}> for ${duration}`);
+      await interaction.reply({ embeds: [embed] });
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at timeout.js`);
-      await interaction.reply({
-        content: "An error occurred while timing out the user",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to timeout user: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ModerateMembers]))
-      return message.reply("You don't have permission to use this command");
+    if (
+      !message.member.permissions.has([PermissionFlagsBits.ModerateMembers])
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
-    if (args.length < 2)
-      return message.reply("Please provide a user and duration");
+    if (args.length < 2) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a user and duration");
+      return message.reply({ embeds: [embed] });
+    }
 
     const userId = args[0].replace(/[<@!>]/g, "");
     const duration = args[1];
     const reason = args.slice(2).join(" ") || "Not provided";
 
     if (!duration.match(/^\d+[dhms]$/)) {
-      return message.reply(
-        "Invalid duration format. Use s/m/h/d (e.g. 30s, 5m, 2h, 1d)"
-      );
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          "Invalid duration format. Use s/m/h/d (e.g. 30s, 5m, 2h, 1d)"
+        );
+      return message.reply({ embeds: [embed] });
     }
 
     const durationMs = ms(duration);
-    if (!durationMs) return message.reply("Invalid duration format");
+    if (!durationMs) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Invalid duration format");
+      return message.reply({ embeds: [embed] });
+    }
 
     try {
       const member = await message.guild.members
         .fetch(userId)
         .catch(() => null);
-      if (!member) return message.reply("User not found in this server");
+      if (!member) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(
+            `Could not find user with ID ${userId} in this server`
+          );
+        return message.reply({ embeds: [embed] });
+      }
 
       await member.timeout(durationMs, reason);
 
@@ -161,10 +196,16 @@ export default {
         await updateUserLogs(userId, message.guildId, "timeouts", timeouts);
       }
 
-      await message.reply(`Timed out <@${userId}> for ${duration}`);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Timed out <@${userId}> for ${duration}`);
+      await message.reply({ embeds: [embed] });
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at timeout.js`);
-      await message.reply("An error occurred while timing out the user");
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to timeout user: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

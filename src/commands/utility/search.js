@@ -34,6 +34,14 @@ export default {
       const results = data.RelatedTopics.filter(
         (topic) => topic.Text && topic.FirstURL
       );
+
+      if (!results.length) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("No results found for your search");
+        return interaction.editReply({ embeds: [embed] });
+      }
+
       const pages = Math.ceil(results.length / 3);
       let currentPage = 0;
 
@@ -86,10 +94,10 @@ export default {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== interaction.user.id) {
-          await i.reply({
-            content: "Only the command user can navigate pages",
-            ephemeral: true,
-          });
+          const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription("Only the command user can navigate pages");
+          await i.reply({ embeds: [embed], ephemeral: true });
           return;
         }
 
@@ -125,15 +133,21 @@ export default {
         interaction.editReply({ components: [disabledRow] }).catch(() => null);
       });
     } catch (error) {
-      console.error("Search error:", error);
-      await interaction
-        .editReply("An error occurred while searching")
-        .catch(() => null);
+      console.error("\x1b[31m", `[Error] ${error} at search.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to search: ${error.message}`);
+      await interaction.editReply({ embeds: [embed] });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!args.length) return message.reply("Please provide a search query");
+    if (!args.length) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a search query");
+      return message.reply({ embeds: [embed] });
+    }
 
     const query = args.join(" ");
     const encodedQuery = encodeURIComponent(query);
@@ -147,6 +161,14 @@ export default {
       const results = data.RelatedTopics.filter(
         (topic) => topic.Text && topic.FirstURL
       );
+
+      if (!results.length) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("No results found for your search");
+        return message.reply({ embeds: [embed] });
+      }
+
       const pages = Math.ceil(results.length / 3);
       let currentPage = 0;
 
@@ -198,10 +220,10 @@ export default {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== message.author.id) {
-          await i.reply({
-            content: "Only the command user can navigate pages",
-            ephemeral: true,
-          });
+          const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription("Only the command user can navigate pages");
+          await i.reply({ embeds: [embed], ephemeral: true });
           return;
         }
 
@@ -235,8 +257,11 @@ export default {
         msg.edit({ components: [disabledRow] }).catch(() => null);
       });
     } catch (error) {
-      console.error("Search error:", error);
-      await message.reply("An error occurred while searching");
+      console.error("\x1b[31m", `[Error] ${error} at search.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to search: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

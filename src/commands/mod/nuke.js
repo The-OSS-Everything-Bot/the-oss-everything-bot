@@ -1,4 +1,8 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  EmbedBuilder,
+} from "discord.js";
 import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
@@ -12,10 +16,10 @@ export default {
     if (
       !interaction.member.permissions.has([PermissionFlagsBits.ManageChannels])
     ) {
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     const channel = interaction.channel;
@@ -46,7 +50,7 @@ export default {
         {
           target: channel,
           executor: interaction.user,
-          count: messages?.size || 0,
+          count: 0,
           reason: "Channel nuked via command",
         }
       );
@@ -55,18 +59,20 @@ export default {
       );
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at nuke.js`);
-      await interaction.reply({
-        content: "An error occurred while nuking the channel",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to nuke channel: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ManageChannels]))
-      return await message.channel.send(
-        "You don't have permission to use this command"
-      );
+    if (!message.member.permissions.has([PermissionFlagsBits.ManageChannels])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
     const channel = message.channel;
     const position = channel.position;
@@ -100,7 +106,10 @@ export default {
       );
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at nuke.js`);
-      await message.channel.send("An error occurred while nuking the channel");
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to nuke channel: ${error.message}`);
+      await message.channel.send({ embeds: [embed] });
     }
   },
 };

@@ -1,5 +1,10 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import {
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+  EmbedBuilder,
+} from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -15,11 +20,12 @@ export default {
     .setContexts([0, 1]),
 
   async execute(interaction) {
-    if (!interaction.member.permissions.has([PermissionFlagsBits.BanMembers]))
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    if (!interaction.member.permissions.has([PermissionFlagsBits.BanMembers])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
 
     const user = interaction.options.getUser("user");
 
@@ -43,22 +49,46 @@ export default {
         await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
-      await interaction.reply(`Unbanned <@${user.id}>`);
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_BAN",
+        {
+          target: user,
+          executor: interaction.user,
+          reason: "Ban removed",
+          type: "unban",
+        }
+      );
+
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Unbanned <@${user.id}>`);
+      await interaction.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "An error occurred while unbanning the user",
-        ephemeral: true,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at unban.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to unban user: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.BanMembers]))
-      return message.reply("You don't have permission to use this command");
+    if (!message.member.permissions.has([PermissionFlagsBits.BanMembers])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
     const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId) return message.reply("Please provide a user ID to unban");
+    if (!userId) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a user ID to unban");
+      return message.reply({ embeds: [embed] });
+    }
 
     try {
       const user = await message.client.users.fetch(userId);
@@ -81,10 +111,23 @@ export default {
         await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
-      await message.reply(`Unbanned <@${user.id}>`);
+      await handleServerLogs(message.client, message.guild, "COMMAND_BAN", {
+        target: user,
+        executor: message.author,
+        reason: "Ban removed",
+        type: "unban",
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Unbanned <@${user.id}>`);
+      await message.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while unbanning the user");
+      console.error("\x1b[31m", `[Error] ${error} at unban.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to unban user: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

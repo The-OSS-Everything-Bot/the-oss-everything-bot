@@ -1,9 +1,9 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("ping")
-    .setDescription("Replies with Pong!")
+    .setDescription("Shows bot latency")
     .setIntegrationTypes([0, 1])
     .setContexts([0, 1, 2]),
 
@@ -13,10 +13,20 @@ export default {
     const reply = await interaction.fetchReply();
     const ping = reply.createdTimestamp - interaction.createdTimestamp;
 
-    interaction.editReply(`Pong! \`${ping}ms\``);
+    const embed = new EmbedBuilder()
+      .setColor(0x57f287)
+      .setDescription(`Pong! \`${ping}ms\``);
+
+    await interaction.editReply({ embeds: [embed] });
   },
 
   async prefixExecute(message) {
-    await message.reply(`Pong! \`${Date.now() - message.createdTimestamp}ms\``);
+    const ping = Date.now() - message.createdTimestamp;
+
+    const embed = new EmbedBuilder()
+      .setColor(0x57f287)
+      .setDescription(`Pong! \`${ping}ms\``);
+
+    await message.reply({ embeds: [embed] });
   },
 };

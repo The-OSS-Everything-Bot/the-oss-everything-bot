@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  EmbedBuilder,
+} from "discord.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -123,11 +128,14 @@ export default {
   async execute(interaction) {
     await interaction.deferReply();
 
-    if (!interaction.member.permissions.has([PermissionFlagsBits.ManageRoles]))
-      return await interaction.editReply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    if (
+      !interaction.member.permissions.has([PermissionFlagsBits.ManageRoles])
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return await interaction.editReply({ embeds: [embed], ephemeral: true });
+    }
 
     const command = interaction.options.getSubcommand();
     const role = interaction.options.getRole("role");
@@ -138,132 +146,321 @@ export default {
 
     try {
       switch (command) {
-        case "give":
-          await interaction.guild.members.cache
-            .find((member) => member.id === user.id)
-            .roles.add(role.id);
+        case "give": {
+          const member = await interaction.guild.members.fetch(user.id);
+          await member.roles.add(role.id);
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Given ${role} to ${member}`);
+          await interaction.editReply({ embeds: [embed] });
           break;
-        case "remove":
-          await interaction.guild.members.cache
-            .find((member) => member.id === user.id)
-            .roles.remove(role.id);
+        }
+        case "remove": {
+          const member = await interaction.guild.members.fetch(user.id);
+          await member.roles.remove(role.id);
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Removed ${role} from ${member}`);
+          await interaction.editReply({ embeds: [embed] });
           break;
-        case "create":
-          await interaction.guild.roles.create({
-            name: name,
+        }
+        case "create": {
+          const newRole = await interaction.guild.roles.create({
+            name,
             color: color || "#000000",
           });
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Created role ${newRole}`);
+          await interaction.editReply({ embeds: [embed] });
           break;
-        case "delete":
-          await interaction.guild.roles.delete(role.id);
+        }
+        case "delete": {
+          await role.delete();
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Deleted role ${role.name}`);
+          await interaction.editReply({ embeds: [embed] });
           break;
-        case "rename":
-          await interaction.guild.roles.cache
-            .find((r) => r.id === role.id)
-            .edit({ name: name });
+        }
+        case "rename": {
+          await role.edit({ name });
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Renamed role to ${name}`);
+          await interaction.editReply({ embeds: [embed] });
           break;
-        case "color":
-          await interaction.guild.roles.cache
-            .find((r) => r.id === role.id)
-            .edit({ color: color });
+        }
+        case "color": {
+          await role.edit({ color });
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Changed role color to ${color}`);
+          await interaction.editReply({ embeds: [embed] });
           break;
-        case "icon":
-          await interaction.guild.roles.cache
-            .find((r) => r.id === role.id)
-            .edit({ icon: icon.url });
+        }
+        case "icon": {
+          await role.edit({ icon: icon.url });
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Changed role icon for ${role.name}`);
+          await interaction.editReply({ embeds: [embed] });
           break;
+        }
       }
 
-      await interaction.editReply({
-        content: `${command} operation successful`,
-      });
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_ROLE",
+        {
+          target: role,
+          executor: interaction.user,
+          type: command,
+          changes: [
+            command === "give" || command === "remove" ? user : null,
+          ].filter(Boolean),
+        }
+      );
     } catch (error) {
-      console.log(`[error] ${error}`);
-      await interaction.editReply({
-        content: `Failed to ${command}`,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at role.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to ${command}: ${error.message}`);
+      await interaction.editReply({ embeds: [embed] });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ManageRoles]))
-      return message.reply("You don't have permission to use this command");
+    if (!message.member.permissions.has([PermissionFlagsBits.ManageRoles])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
-    if (!args.length) return message.reply("Please provide a subcommand");
+    if (!args.length) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a subcommand");
+      return message.reply({ embeds: [embed] });
+    }
 
     const subcommand = args[0].toLowerCase();
     try {
       switch (subcommand) {
         case "give": {
-          if (args.length < 3)
-            return message.reply("Please provide a user and role");
+          if (args.length < 3) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Please provide a user and role");
+            return message.reply({ embeds: [embed] });
+          }
           const userId = args[1].replace(/[<@!>]/g, "");
           const roleId = args[2].replace(/[<@&>]/g, "");
           const member = await message.guild.members.fetch(userId);
           const role = await message.guild.roles.fetch(roleId);
-          if (!member || !role) return message.reply("Invalid user or role");
+          if (!member || !role) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Invalid user or role");
+            return message.reply({ embeds: [embed] });
+          }
           await member.roles.add(role);
-          await message.reply(`Given ${role} to ${member}`);
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Given ${role} to ${member}`);
+          await message.reply({ embeds: [embed] });
+          await handleServerLogs(
+            message.client,
+            message.guild,
+            "COMMAND_ROLE",
+            {
+              target: role,
+              executor: message.author,
+              type: "give",
+              changes: [member.user],
+            }
+          );
           break;
         }
         case "remove": {
-          if (args.length < 3)
-            return message.reply("Please provide a user and role");
+          if (args.length < 3) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Please provide a user and role");
+            return message.reply({ embeds: [embed] });
+          }
           const userId = args[1].replace(/[<@!>]/g, "");
           const roleId = args[2].replace(/[<@&>]/g, "");
           const member = await message.guild.members.fetch(userId);
           const role = await message.guild.roles.fetch(roleId);
-          if (!member || !role) return message.reply("Invalid user or role");
+          if (!member || !role) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Invalid user or role");
+            return message.reply({ embeds: [embed] });
+          }
           await member.roles.remove(role);
-          await message.reply(`Removed ${role} from ${member}`);
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Removed ${role} from ${member}`);
+          await message.reply({ embeds: [embed] });
+          await handleServerLogs(
+            message.client,
+            message.guild,
+            "COMMAND_ROLE",
+            {
+              target: role,
+              executor: message.author,
+              type: "remove",
+              changes: [member.user],
+            }
+          );
           break;
         }
         case "create": {
-          if (args.length < 2)
-            return message.reply("Please provide a role name");
+          if (args.length < 2) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Please provide a role name");
+            return message.reply({ embeds: [embed] });
+          }
           const name = args[1];
           const color = args[2] || "#000000";
           const role = await message.guild.roles.create({ name, color });
-          await message.reply(`Created role ${role}`);
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Created role ${role}`);
+          await message.reply({ embeds: [embed] });
+          await handleServerLogs(
+            message.client,
+            message.guild,
+            "COMMAND_ROLE",
+            {
+              target: role,
+              executor: message.author,
+              type: "create",
+            }
+          );
           break;
         }
         case "delete": {
-          if (args.length < 2) return message.reply("Please provide a role");
+          if (args.length < 2) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Please provide a role");
+            return message.reply({ embeds: [embed] });
+          }
           const roleId = args[1].replace(/[<@&>]/g, "");
           const role = await message.guild.roles.fetch(roleId);
-          if (!role) return message.reply("Invalid role");
+          if (!role) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Invalid role");
+            return message.reply({ embeds: [embed] });
+          }
+          const roleName = role.name;
           await role.delete();
-          await message.reply("Role deleted");
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Deleted role ${roleName}`);
+          await message.reply({ embeds: [embed] });
+          await handleServerLogs(
+            message.client,
+            message.guild,
+            "COMMAND_ROLE",
+            {
+              target: { id: roleId, name: roleName },
+              executor: message.author,
+              type: "delete",
+            }
+          );
           break;
         }
         case "rename": {
-          if (args.length < 3)
-            return message.reply("Please provide a role and new name");
+          if (args.length < 3) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Please provide a role and new name");
+            return message.reply({ embeds: [embed] });
+          }
           const roleId = args[1].replace(/[<@&>]/g, "");
           const newName = args[2];
           const role = await message.guild.roles.fetch(roleId);
-          if (!role) return message.reply("Invalid role");
+          if (!role) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Invalid role");
+            return message.reply({ embeds: [embed] });
+          }
+          const oldName = role.name;
           await role.edit({ name: newName });
-          await message.reply(`Renamed role to ${newName}`);
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Renamed role from ${oldName} to ${newName}`);
+          await message.reply({ embeds: [embed] });
+          await handleServerLogs(
+            message.client,
+            message.guild,
+            "COMMAND_ROLE",
+            {
+              target: role,
+              executor: message.author,
+              type: "rename",
+              changes: [`${oldName} → ${newName}`],
+            }
+          );
           break;
         }
         case "color": {
-          if (args.length < 3)
-            return message.reply("Please provide a role and color");
+          if (args.length < 3) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Please provide a role and color");
+            return message.reply({ embeds: [embed] });
+          }
           const roleId = args[1].replace(/[<@&>]/g, "");
           const color = args[2];
           const role = await message.guild.roles.fetch(roleId);
-          if (!role) return message.reply("Invalid role");
+          if (!role) {
+            const embed = new EmbedBuilder()
+              .setColor(0xff0000)
+              .setDescription("Invalid role");
+            return message.reply({ embeds: [embed] });
+          }
+          const oldColor = role.color.toString(16);
           await role.edit({ color });
-          await message.reply(`Changed role color to ${color}`);
+          const embed = new EmbedBuilder()
+            .setColor(0x57f287)
+            .setDescription(`Changed role color from #${oldColor} to ${color}`);
+          await message.reply({ embeds: [embed] });
+          await handleServerLogs(
+            message.client,
+            message.guild,
+            "COMMAND_ROLE",
+            {
+              target: role,
+              executor: message.author,
+              type: "color",
+              changes: [`#${oldColor} → ${color}`],
+            }
+          );
           break;
         }
-        default:
-          return message.reply("Invalid subcommand");
+        default: {
+          const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription("Invalid subcommand");
+          return message.reply({ embeds: [embed] });
+        }
       }
     } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while executing the command");
+      console.error("\x1b[31m", `[Error] ${error} at role.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to ${subcommand}: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

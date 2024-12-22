@@ -1,13 +1,23 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+
+const calculate = (expression) => {
+  const sanitized = expression.replace(/[^-()\d/*+.]/g, "");
+  if (!sanitized) throw new Error("Invalid expression");
+
+  const result = Function(`"use strict"; return (${sanitized})`)();
+  if (!isFinite(result)) throw new Error("Result is not a finite number");
+
+  return result;
+};
 
 export default {
   data: new SlashCommandBuilder()
     .setName("calculate")
-    .setDescription("Calculates an expression")
+    .setDescription("Calculates a mathematical expression")
     .addStringOption((option) =>
       option
         .setName("expression")
-        .setDescription("The expression to calculate")
+        .setDescription("The expression to calculate (e.g. 2 + 2)")
         .setRequired(true)
         .setMinLength(1)
     )
@@ -17,35 +27,51 @@ export default {
   async execute(interaction) {
     const expression = interaction.options.getString("expression");
 
-    if (expression.trim().split(" ").join("") == "0.1+0.2") {
-      await interaction.reply("0.3");
-      return;
-    }
-
     try {
-      const result = eval(expression);
-      await interaction.reply(`Result: ${result}`);
+      const result = calculate(expression);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .addFields(
+          { name: "Expression", value: `\`${expression}\``, inline: true },
+          { name: "Result", value: `\`${result}\``, inline: true }
+        );
+
+      await interaction.reply({ embeds: [embed] });
     } catch (error) {
-      await interaction.reply(`Error: ${error}`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to calculate: ${error.message}`);
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!args.length)
-      return message.reply("Please provide an expression to calculate");
+    if (!args.length) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide an expression to calculate");
+      return message.reply({ embeds: [embed] });
+    }
 
     const expression = args.join(" ");
 
-    if (expression.trim().split(" ").join("") == "0.1+0.2") {
-      await message.reply("0.3");
-      return;
-    }
-
     try {
-      const result = eval(expression);
-      await message.reply(`Result: ${result}`);
+      const result = calculate(expression);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .addFields(
+          { name: "Expression", value: `\`${expression}\``, inline: true },
+          { name: "Result", value: `\`${result}\``, inline: true }
+        );
+
+      await message.reply({ embeds: [embed] });
     } catch (error) {
-      await message.reply(`Error: ${error}`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to calculate: ${error.message}`);
+
+      await message.reply({ embeds: [embed] });
     }
   },
 };

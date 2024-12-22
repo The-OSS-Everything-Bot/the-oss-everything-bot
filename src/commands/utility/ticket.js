@@ -2,6 +2,8 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
   ButtonBuilder,
+  ActionRowBuilder,
+  ButtonStyle,
   PermissionFlagsBits,
 } from "discord.js";
 import { getGuildDB } from "../../utils/dbManager.js";
@@ -21,7 +23,9 @@ export default {
         .setName("category")
         .setDescription("The category to create tickets in")
         .setRequired(true)
-    ),
+    )
+    .setIntegrationTypes([0])
+    .setContexts([0]),
 
   async execute(interaction) {
     await interaction.deferReply();
@@ -32,13 +36,22 @@ export default {
           PermissionFlagsBits.ManageChannels,
         ])
       ) {
-        return await interaction.editReply({
-          content: "You don't have permission to use this command",
-        });
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("You don't have permission to use this command");
+        return await interaction.editReply({ embeds: [embed] });
       }
 
       const channel = interaction.options.getChannel("channel");
       const category = interaction.options.getChannel("category");
+
+      if (!channel || !category) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("Invalid channel or category");
+        return await interaction.editReply({ embeds: [embed] });
+      }
+
       const guildDB = await getGuildDB(interaction.guildId);
 
       await guildDB.execute({
@@ -64,45 +77,52 @@ export default {
         })
       );
 
+      const ticketEmbed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle("Support Tickets")
+        .setDescription("Click the button below to create a new ticket");
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("new ticket")
+          .setLabel("Create ticket")
+          .setStyle(ButtonStyle.Success)
+          .setEmoji("🎫")
+      );
+
       await channel.send({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Ticket")
-            .setDescription("Would you like to create new ticket?"),
-        ],
-        components: [
-          {
-            type: 1,
-            components: [
-              new ButtonBuilder()
-                .setCustomId(`new ticket`)
-                .setLabel("Create ticket")
-                .setStyle(3)
-                .setEmoji("🎫"),
-            ],
-          },
-        ],
+        embeds: [ticketEmbed],
+        components: [row],
       });
 
-      await interaction.editReply({
-        content: "Ticket channel setup successfully",
-        ephemeral: true,
-      });
-    } catch (err) {
-      console.error(`[Error] ${err}`);
-      await interaction.editReply({
-        content: "Something went wrong",
-        ephemeral: true,
-      });
+      const successEmbed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription("Ticket system setup successfully");
+
+      await interaction.editReply({ embeds: [successEmbed], ephemeral: true });
+    } catch (error) {
+      console.error("\x1b[31m", `[Error] ${error} at ticket.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to setup ticket system: ${error.message}`);
+      await interaction.editReply({ embeds: [embed] });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ManageChannels]))
-      return message.reply("You don't have permission to use this command");
+    if (!message.member.permissions.has([PermissionFlagsBits.ManageChannels])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
-    if (args.length < 2)
-      return message.reply("Please provide a channel and category");
+    if (args.length < 2) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a channel and category");
+      return message.reply({ embeds: [embed] });
+    }
 
     const channelId = args[0].replace(/[<#>]/g, "");
     const categoryId = args[1].replace(/[<#>]/g, "");
@@ -111,8 +131,12 @@ export default {
       const channel = message.guild.channels.cache.get(channelId);
       const category = message.guild.channels.cache.get(categoryId);
 
-      if (!channel || !category)
-        return message.reply("Invalid channel or category");
+      if (!channel || !category) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("Invalid channel or category");
+        return message.reply({ embeds: [embed] });
+      }
 
       const guildDB = await getGuildDB(message.guildId);
 
@@ -139,30 +163,35 @@ export default {
         })
       );
 
+      const ticketEmbed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle("Support Tickets")
+        .setDescription("Click the button below to create a new ticket");
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("new ticket")
+          .setLabel("Create ticket")
+          .setStyle(ButtonStyle.Success)
+          .setEmoji("🎫")
+      );
+
       await channel.send({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Ticket")
-            .setDescription("Would you like to create new ticket?"),
-        ],
-        components: [
-          {
-            type: 1,
-            components: [
-              new ButtonBuilder()
-                .setCustomId(`new ticket`)
-                .setLabel("Create ticket")
-                .setStyle(3)
-                .setEmoji("🎫"),
-            ],
-          },
-        ],
+        embeds: [ticketEmbed],
+        components: [row],
       });
 
-      await message.reply("Ticket channel setup successfully");
+      const successEmbed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription("Ticket system setup successfully");
+
+      await message.reply({ embeds: [successEmbed] });
     } catch (error) {
-      console.error(`[Error] ${error}`);
-      await message.reply("Something went wrong");
+      console.error("\x1b[31m", `[Error] ${error} at ticket.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to setup ticket system: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

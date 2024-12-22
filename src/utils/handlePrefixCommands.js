@@ -1,3 +1,4 @@
+import { EmbedBuilder } from "discord.js";
 import getLocalCommands from "./getLocalCommands.js";
 import { getGuildDB, getUserPrefix } from "./dbManager.js";
 
@@ -39,12 +40,47 @@ export default async (client, message) => {
   const commands = await getLocalCommands();
   const command = commands.find((cmd) => cmd.data.name === commandName);
 
-  if (!command || !command.prefixExecute) return;
+  if (!command || !command.prefixExecute) {
+    const embed = new EmbedBuilder()
+      .setColor(0xff0000)
+      .setDescription("Command not found")
+      .setFooter({ text: `Use ${prefix}help to see all commands` });
+    return message.reply({ embeds: [embed] });
+  }
+
+  const hasRequiredOptions = command.data.options?.some((opt) => opt.required);
+  if (hasRequiredOptions && !args.length) {
+    const options = command.data.options;
+    const usage = options
+      .map((opt) => (opt.required ? `<${opt.name}>` : `[${opt.name}]`))
+      .join(" ");
+
+    const embed = new EmbedBuilder()
+      .setColor(0xff0000)
+      .setTitle("Command Usage")
+      .setDescription(`\`${prefix}${command.data.name} ${usage}\``)
+      .addFields({
+        name: "Description",
+        value: command.data.description,
+      });
+
+    if (options.length) {
+      const optionsField = options
+        .map((opt) => `\`${opt.name}\` - ${opt.description}`)
+        .join("\n");
+      embed.addFields({ name: "Options", value: optionsField });
+    }
+
+    return message.reply({ embeds: [embed] });
+  }
 
   try {
     await command.prefixExecute(message, args, client);
   } catch (error) {
     console.error(error);
-    await message.reply("An error occurred while executing this command!");
+    const embed = new EmbedBuilder()
+      .setColor(0xff0000)
+      .setDescription("An error occurred while executing this command!");
+    await message.reply({ embeds: [embed] });
   }
 };

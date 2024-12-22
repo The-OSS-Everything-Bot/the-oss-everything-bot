@@ -1,4 +1,8 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import {
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+  EmbedBuilder,
+} from "discord.js";
 import { getUser, updateUserLogs } from "../../schemas/user.js";
 import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
@@ -12,27 +16,28 @@ export default {
         .setDescription("The user to clear infractions for")
         .setRequired(true)
     )
-    .setIntegrationTypes([0, 1])
-    .setContexts([0, 1]),
+    .setIntegrationTypes([0])
+    .setContexts([0]),
 
   async execute(interaction) {
     if (
       !interaction.member.permissions.has([PermissionFlagsBits.Administrator])
-    )
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
 
     const user = interaction.options.getUser("user");
 
     try {
       const userData = await getUser(user.id, interaction.guildId);
       if (!userData) {
-        return await interaction.reply({
-          content: "No infractions found for this user",
-          ephemeral: true,
-        });
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("No infractions found for this user");
+        return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 
       const actions = ["warns", "bans", "kicks", "timeouts", "jails"];
@@ -52,30 +57,44 @@ export default {
         }
       );
 
-      await interaction.reply(`Cleared all infractions for <@${user.id}>`);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Cleared all infractions for <@${user.id}>`);
+      await interaction.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "An error occurred while clearing infractions",
-        ephemeral: true,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at clearinfractions.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to clear infractions: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.Administrator]))
-      return message.reply("You don't have permission to use this command");
+    if (!message.member.permissions.has([PermissionFlagsBits.Administrator])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
     const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId)
-      return message.reply("Please provide a user to clear infractions for");
+    if (!userId) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a user to clear infractions for");
+      return message.reply({ embeds: [embed] });
+    }
 
     try {
       const user = await message.client.users.fetch(userId);
       const userData = await getUser(user.id, message.guildId);
 
       if (!userData) {
-        return message.reply("No infractions found for this user");
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("No infractions found for this user");
+        return message.reply({ embeds: [embed] });
       }
 
       const actions = ["warns", "bans", "kicks", "timeouts", "jails"];
@@ -95,10 +114,16 @@ export default {
         }
       );
 
-      await message.reply(`Cleared all infractions for <@${user.id}>`);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Cleared all infractions for <@${user.id}>`);
+      await message.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while clearing infractions");
+      console.error("\x1b[31m", `[Error] ${error} at clearinfractions.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to clear infractions: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

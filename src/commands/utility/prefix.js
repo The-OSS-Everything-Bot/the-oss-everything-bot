@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { getGuildDB } from "../../utils/dbManager.js";
 
 export default {
@@ -32,23 +32,34 @@ export default {
       const cacheKey = `user:${interaction.guildId}:${interaction.user.id}:prefix`;
       await global.redis.set(cacheKey, prefix);
 
-      await interaction.reply({
-        content: `Set your prefix to \`${prefix}\``,
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Set your prefix to \`${prefix}\``);
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "An error occurred while setting your prefix",
-        ephemeral: true,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at prefix.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to set prefix: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!args.length) return message.reply("Please provide a new prefix");
-    if (args[0].length > 3)
-      return message.reply("Prefix cannot be longer than 3 characters");
+    if (!args.length) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a new prefix");
+      return message.reply({ embeds: [embed] });
+    }
+
+    if (args[0].length > 3) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Prefix cannot be longer than 3 characters");
+      return message.reply({ embeds: [embed] });
+    }
 
     try {
       const prefix = args[0];
@@ -65,10 +76,17 @@ export default {
       const cacheKey = `user:${message.guildId}:${message.author.id}:prefix`;
       await global.redis.set(cacheKey, prefix);
 
-      await message.reply(`Set your prefix to \`${prefix}\``);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Set your prefix to \`${prefix}\``);
+
+      await message.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while setting your prefix");
+      console.error("\x1b[31m", `[Error] ${error} at prefix.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to set prefix: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

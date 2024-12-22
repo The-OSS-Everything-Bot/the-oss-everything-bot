@@ -1,57 +1,53 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  EmbedBuilder,
+} from "discord.js";
 import { getGuildDB } from "../../utils/dbManager.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("antiraid")
     .setDescription("Configure anti-raid protection")
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName("toggle")
-        .setDescription("Toggle anti-raid protection")
-        .addBooleanOption((option) =>
-          option
-            .setName("enabled")
-            .setDescription("Enable or disable anti-raid protection")
-            .setRequired(true)
-        )
-        .addChannelOption((option) =>
-          option
-            .setName("channel")
-            .setDescription("Channel to jail raiders in")
-            .setRequired(true)
-        )
+    .addStringOption((option) =>
+      option
+        .setName("subcommand")
+        .setDescription("The subcommand to execute (toggle/threshold)")
+        .setRequired(true)
     )
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName("threshold")
-        .setDescription("Set message threshold for raid detection")
-        .addIntegerOption((option) =>
-          option
-            .setName("messages")
-            .setDescription("Number of messages within timeframe to trigger")
-            .setRequired(true)
-            .setMinValue(3)
-            .setMaxValue(20)
-        )
-        .addIntegerOption((option) =>
-          option
-            .setName("seconds")
-            .setDescription("Timeframe in seconds")
-            .setRequired(true)
-            .setMinValue(1)
-            .setMaxValue(60)
-        )
-    ),
+    .addBooleanOption((option) =>
+      option
+        .setName("enabled")
+        .setDescription("Enable or disable anti-raid protection")
+    )
+    .addChannelOption((option) =>
+      option.setName("channel").setDescription("Channel to jail raiders in")
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("messages")
+        .setDescription("Number of messages within timeframe to trigger (3-20)")
+        .setMinValue(3)
+        .setMaxValue(20)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("seconds")
+        .setDescription("Timeframe in seconds (1-60)")
+        .setMinValue(1)
+        .setMaxValue(60)
+    )
+    .setIntegrationTypes([0])
+    .setContexts([0]),
 
   async execute(interaction) {
     if (
       !interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])
     ) {
-      return interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     const subcommand = interaction.options.getSubcommand();
@@ -76,10 +72,12 @@ export default {
         settings.antiraid_jail_channel = channel.id;
         await global.redis.set(cacheKey, JSON.stringify(settings));
 
-        return interaction.reply({
-          content: `Anti-raid protection has been ${enabled ? "enabled" : "disabled"} with jail channel set to ${channel}`,
-          ephemeral: true,
-        });
+        const embed = new EmbedBuilder()
+          .setColor(0x57f287)
+          .setDescription(
+            `Anti-raid protection has been ${enabled ? "enabled" : "disabled"} with jail channel set to ${channel}`
+          );
+        return interaction.reply({ embeds: [embed] });
       }
 
       if (subcommand === "threshold") {
@@ -100,23 +98,30 @@ export default {
         settings.antiraid_time_window = seconds;
         await global.redis.set(cacheKey, JSON.stringify(settings));
 
-        return interaction.reply({
-          content: `Anti-raid threshold set to ${messages} messages within ${seconds} seconds`,
-          ephemeral: true,
-        });
+        const embed = new EmbedBuilder()
+          .setColor(0x57f287)
+          .setDescription(
+            `Anti-raid threshold set to ${messages} messages within ${seconds} seconds`
+          );
+        return interaction.reply({ embeds: [embed] });
       }
+
+      if (!subcommand) return;
     } catch (error) {
-      console.error(error);
-      return interaction.reply({
-        content: "An error occurred while configuring anti-raid protection",
-        ephemeral: true,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at antiraid.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to configure anti-raid: ${error.message}`);
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
     if (!message.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
-      return message.reply("You don't have permission to use this command");
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
     }
 
     const subcommand = args[0]?.toLowerCase();
@@ -129,12 +134,18 @@ export default {
         const channelId = args[2]?.replace(/[<#>]/g, "");
 
         if (!channelId) {
-          return message.reply("Please provide a channel for jail");
+          const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription("Please provide a channel for jail");
+          return message.reply({ embeds: [embed] });
         }
 
         const channel = message.guild.channels.cache.get(channelId);
         if (!channel) {
-          return message.reply("Invalid channel");
+          const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription("Invalid channel");
+          return message.reply({ embeds: [embed] });
         }
 
         await guildDB.execute({
@@ -151,9 +162,12 @@ export default {
         settings.antiraid_jail_channel = channel.id;
         await global.redis.set(cacheKey, JSON.stringify(settings));
 
-        return message.reply(
-          `Anti-raid protection has been ${enabled ? "enabled" : "disabled"} with jail channel set to ${channel}`
-        );
+        const embed = new EmbedBuilder()
+          .setColor(0x57f287)
+          .setDescription(
+            `Anti-raid protection has been ${enabled ? "enabled" : "disabled"} with jail channel set to ${channel}`
+          );
+        return message.reply({ embeds: [embed] });
       }
 
       if (subcommand === "threshold") {
@@ -168,9 +182,12 @@ export default {
           seconds < 1 ||
           seconds > 60
         ) {
-          return message.reply(
-            "Please provide valid threshold values (messages: 3-20, seconds: 1-60)"
-          );
+          const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription(
+              "Please provide valid threshold values (messages: 3-20, seconds: 1-60)"
+            );
+          return message.reply({ embeds: [embed] });
         }
 
         await guildDB.execute({
@@ -187,19 +204,21 @@ export default {
         settings.antiraid_time_window = seconds;
         await global.redis.set(cacheKey, JSON.stringify(settings));
 
-        return message.reply(
-          `Anti-raid threshold set to ${messages} messages within ${seconds} seconds`
-        );
+        const embed = new EmbedBuilder()
+          .setColor(0x57f287)
+          .setDescription(
+            `Anti-raid threshold set to ${messages} messages within ${seconds} seconds`
+          );
+        return message.reply({ embeds: [embed] });
       }
 
-      return message.reply(
-        "Please provide a valid subcommand (toggle/channel/threshold)"
-      );
+      return;
     } catch (error) {
-      console.error(error);
-      return message.reply(
-        "An error occurred while configuring anti-raid protection"
-      );
+      console.error("\x1b[31m", `[Error] ${error} at antiraid.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to configure anti-raid: ${error.message}`);
+      return message.reply({ embeds: [embed] });
     }
   },
 };

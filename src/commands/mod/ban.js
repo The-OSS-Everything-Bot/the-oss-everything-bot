@@ -1,5 +1,10 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import {
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+  EmbedBuilder,
+} from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
+import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -14,18 +19,20 @@ export default {
         .setDescription("The reason for the ban")
         .setRequired(false)
     )
-    .setIntegrationTypes([0, 1])
-    .setContexts([0, 1]),
+    .setIntegrationTypes([0])
+    .setContexts([0]),
 
   async execute(interaction) {
-    if (!interaction.member.permissions.has([PermissionFlagsBits.BanMembers]))
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    if (!interaction.member.permissions.has([PermissionFlagsBits.BanMembers])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
 
     const user = interaction.options.getUser("user");
-    const reason = interaction.options.getString("reason") || "Not provided";
+    const reason =
+      interaction.options.getString("reason") || "No reason provided";
 
     try {
       const guild = interaction.guild;
@@ -46,24 +53,47 @@ export default {
         await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
-      await interaction.reply(`Banned <@${user.id}>`);
+      await handleServerLogs(
+        interaction.client,
+        interaction.guild,
+        "COMMAND_BAN",
+        {
+          target: user,
+          executor: interaction.user,
+          reason,
+        }
+      );
+
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Successfully banned ${user.tag}`);
+      await interaction.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "An error occurred while banning the user",
-        ephemeral: true,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at ban.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to ban user: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.BanMembers]))
-      return message.reply("You don't have permission to use this command");
+    if (!message.member.permissions.has([PermissionFlagsBits.BanMembers])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
     const userId = args[0]?.replace(/[<@!>]/g, "");
-    if (!userId) return message.reply("Please provide a user to ban");
+    if (!userId) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a user to ban");
+      return message.reply({ embeds: [embed] });
+    }
 
-    const reason = args.slice(1).join(" ") || "Not provided";
+    const reason = args.slice(1).join(" ") || "No reason provided";
 
     try {
       const user = await message.client.users.fetch(userId);
@@ -85,10 +115,22 @@ export default {
         await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
-      await message.reply(`Banned <@${user.id}>`);
+      await handleServerLogs(message.client, message.guild, "COMMAND_BAN", {
+        target: user,
+        executor: message.author,
+        reason,
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Successfully banned ${user.tag}`);
+      await message.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await message.reply("An error occurred while banning the user");
+      console.error("\x1b[31m", `[Error] ${error} at ban.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to ban user: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

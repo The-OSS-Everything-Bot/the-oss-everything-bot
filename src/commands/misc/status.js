@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   ActivityType,
   PermissionFlagsBits,
+  EmbedBuilder,
 } from "discord.js";
 
 export default {
@@ -13,25 +14,12 @@ export default {
         .setName("status")
         .setDescription("The status of the bot")
         .setRequired(true)
-        .addChoices([
-          {
-            name: "Online",
-            value: "online",
-          },
-          {
-            name: "Idle",
-            value: "idle",
-          },
-          {
-            name: "Do Not Disturb",
-            value: "dnd",
-          },
-          {
-            name: "Invisible",
-            value: "invisible",
-          },
-        ])
-        .setRequired(true)
+        .addChoices(
+          { name: "Online", value: "online" },
+          { name: "Idle", value: "idle" },
+          { name: "Do Not Disturb", value: "dnd" },
+          { name: "Invisible", value: "invisible" }
+        )
     )
     .addStringOption((option) =>
       option
@@ -43,106 +31,130 @@ export default {
       option
         .setName("activity")
         .setDescription("The activity of the bot")
-        .setChoices([
-          {
-            name: "Playing",
-            value: "Playing",
-          },
-          {
-            name: "Streaming",
-            value: "Streaming",
-          },
-          {
-            name: "Listening",
-            value: "Listening",
-          },
-          {
-            name: "Watching",
-            value: "Watching",
-          },
-          {
-            name: "Competing",
-            value: "Competing",
-          },
-        ])
+        .setChoices(
+          { name: "Playing", value: "PLAYING" },
+          { name: "Streaming", value: "STREAMING" },
+          { name: "Listening", value: "LISTENING" },
+          { name: "Watching", value: "WATCHING" },
+          { name: "Competing", value: "COMPETING" }
+        )
         .setRequired(false)
     )
     .setIntegrationTypes([0])
     .setContexts([0, 1]),
 
   async execute(interaction, client) {
-    if (
-      !interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])
-    ) {
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+    try {
+      if (
+        !interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])
+      ) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("You don't have permission to use this command");
+        return await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      const status = interaction.options.getString("status");
+      const message = interaction.options.getString("message");
+      const type = interaction.options.getString("activity");
+
+      if (message && type) {
+        client.user.setPresence({
+          status: status,
+          activities: [{ name: message, type: ActivityType[type] }],
+        });
+      } else {
+        client.user.setPresence({ status: status });
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(
+          `Status set to \`${status}\`${message ? ` with activity: ${type.charAt(0) + type.slice(1).toLowerCase()} ${message}` : ""}`
+        );
+
+      await interaction.reply({ embeds: [embed] });
+    } catch (error) {
+      console.error("\x1b[31m", `[Error] ${error} at status.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to set status: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
-
-    const status = interaction.options.getString("status");
-    const message = interaction.options.getString("message");
-    const type = interaction.options.getString("activity");
-
-    if (message && type) {
-      client.user.setPresence({
-        status: status,
-        activities: [{ name: message, type: ActivityType[type] }],
-      });
-    } else {
-      client.user.setPresence({
-        status: status,
-      });
-    }
-
-    await interaction.reply({
-      content: `Status set to ${status}`,
-    });
   },
 
   async prefixExecute(message, args, client) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
-      return message.reply("You don't have permission to use this command");
+    try {
+      if (!message.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("You don't have permission to use this command");
+        return message.reply({ embeds: [embed] });
+      }
+
+      const validStatuses = ["online", "idle", "dnd", "invisible"];
+      const validActivities = [
+        "PLAYING",
+        "STREAMING",
+        "LISTENING",
+        "WATCHING",
+        "COMPETING",
+      ];
+
+      const status = args[0]?.toLowerCase();
+      if (!status || !validStatuses.includes(status)) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(
+            "Please provide a valid status: online, idle, dnd, or invisible"
+          );
+        return message.reply({ embeds: [embed] });
+      }
+
+      if (args.length === 1) {
+        client.user.setPresence({ status });
+        const embed = new EmbedBuilder()
+          .setColor(0x57f287)
+          .setDescription(`Status set to \`${status}\``);
+        return message.reply({ embeds: [embed] });
+      }
+
+      const type = args[1].toUpperCase();
+      if (!validActivities.includes(type)) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(
+            "Please provide a valid activity type: PLAYING, STREAMING, LISTENING, WATCHING, or COMPETING"
+          );
+        return message.reply({ embeds: [embed] });
+      }
+
+      const activityMessage = args.slice(2).join(" ");
+      if (!activityMessage) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("Please provide a message for the activity");
+        return message.reply({ embeds: [embed] });
+      }
+
+      client.user.setPresence({
+        status,
+        activities: [{ name: activityMessage, type: ActivityType[type] }],
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(
+          `Status set to \`${status}\` with activity: ${type.charAt(0) + type.slice(1).toLowerCase()} ${activityMessage}`
+        );
+
+      await message.reply({ embeds: [embed] });
+    } catch (error) {
+      console.error("\x1b[31m", `[Error] ${error} at status.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to set status: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
-
-    const validStatuses = ["online", "idle", "dnd", "invisible"];
-    const validActivities = [
-      "Playing",
-      "Streaming",
-      "Listening",
-      "Watching",
-      "Competing",
-    ];
-
-    const status = args[0]?.toLowerCase();
-    if (!status || !validStatuses.includes(status)) {
-      return message.reply(
-        "Please provide a valid status: online, idle, dnd, or invisible"
-      );
-    }
-
-    if (args.length === 1) {
-      client.user.setPresence({ status });
-      return message.reply(`Status set to ${status}`);
-    }
-
-    const type = args[1];
-    if (!validActivities.includes(type)) {
-      return message.reply(
-        "Please provide a valid activity type: Playing, Streaming, Listening, Watching, or Competing"
-      );
-    }
-
-    const activityMessage = args.slice(2).join(" ");
-    if (!activityMessage) {
-      return message.reply("Please provide a message for the activity");
-    }
-
-    client.user.setPresence({
-      status,
-      activities: [{ name: activityMessage, type: ActivityType[type] }],
-    });
-
-    await message.reply(`Status set to ${status}`);
   },
 };

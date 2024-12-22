@@ -1,4 +1,8 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  EmbedBuilder,
+} from "discord.js";
 import { getGuildDB } from "../../utils/dbManager.js";
 
 export default {
@@ -18,10 +22,10 @@ export default {
     if (
       !interaction.member.permissions.has([PermissionFlagsBits.ManageGuild])
     ) {
-      return await interaction.reply({
-        content: "You don't have permission to use this command",
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     try {
@@ -42,30 +46,44 @@ export default {
         JSON.stringify({ log_channel_id: channel.id })
       );
 
-      await interaction.reply({
-        content: `Set logging channel to ${channel}`,
-        ephemeral: true,
-      });
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Successfully set logging channel to ${channel}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "An error occurred while setting the logging channel",
-        ephemeral: true,
-      });
+      console.error("\x1b[31m", `[Error] ${error} at setlogs.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to set logging channel: ${error.message}`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 
   async prefixExecute(message, args) {
-    if (!message.member.permissions.has([PermissionFlagsBits.ManageGuild]))
-      return message.reply("You don't have permission to use this command");
+    if (!message.member.permissions.has([PermissionFlagsBits.ManageGuild])) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("You don't have permission to use this command");
+      return message.reply({ embeds: [embed] });
+    }
 
-    if (!args.length) return message.reply("Please provide a channel");
+    if (!args.length) {
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription("Please provide a channel");
+      return message.reply({ embeds: [embed] });
+    }
 
     try {
       const channelId = args[0].replace(/[<#>]/g, "");
       const channel = message.guild.channels.cache.get(channelId);
 
-      if (!channel) return message.reply("Invalid channel");
+      if (!channel) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription("Invalid channel provided");
+        return message.reply({ embeds: [embed] });
+      }
 
       const guildDB = await getGuildDB(message.guildId);
 
@@ -83,12 +101,16 @@ export default {
         JSON.stringify({ log_channel_id: channel.id })
       );
 
-      await message.reply(`Set logging channel to ${channel}`);
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setDescription(`Successfully set logging channel to ${channel}`);
+      await message.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      await message.reply(
-        "An error occurred while setting the logging channel"
-      );
+      console.error("\x1b[31m", `[Error] ${error} at setlogs.js`);
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(`Failed to set logging channel: ${error.message}`);
+      await message.reply({ embeds: [embed] });
     }
   },
 };

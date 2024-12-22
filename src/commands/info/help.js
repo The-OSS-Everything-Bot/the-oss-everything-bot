@@ -11,47 +11,88 @@ export default {
   data: new SlashCommandBuilder()
     .setName("help")
     .setDescription("Shows all available commands")
-    .setIntegrationTypes([0, 1])
-    .setContexts([0, 1, 2]),
+    .addStringOption((option) =>
+      option
+        .setName("command")
+        .setDescription("Get detailed help for a specific command")
+        .setRequired(false)
+    )
+    .setIntegrationTypes([0])
+    .setContexts([0]),
 
   async execute(interaction) {
     await interaction.deferReply();
     const commands = await getLocalCommands();
+    const specificCommand = interaction.options.getString("command");
+
+    if (specificCommand) {
+      const command = commands.find(
+        (cmd) => cmd.data.name === specificCommand.toLowerCase()
+      );
+      if (!command) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(`Command \`${specificCommand}\` not found`);
+        return interaction.editReply({ embeds: [embed] });
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle(`Command: ${command.data.name}`)
+        .setDescription(command.data.description)
+        .addFields({
+          name: "Category",
+          value: command.category || "Misc",
+          inline: true,
+        });
+
+      if (command.data.options?.length) {
+        const options = command.data.options
+          .map(
+            (opt) =>
+              `\`${opt.name}\` - ${opt.description}${opt.required ? " (Required)" : ""}`
+          )
+          .join("\n");
+        embed.addFields({ name: "Options", value: options });
+      }
+
+      return interaction.editReply({ embeds: [embed] });
+    }
 
     const categories = {
       info: commands.filter(
         (cmd) =>
-          cmd.data.name.match(/^(info|serverinfo|help)/) ||
-          cmd.category === "info"
+          cmd.category === "info" ||
+          cmd.data.name.match(/^(info|serverinfo|help)/)
       ),
       mod: commands.filter(
         (cmd) =>
+          cmd.category === "mod" ||
           cmd.data.name.match(
             /^(ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban)/
-          ) || cmd.category === "mod"
+          )
       ),
       utility: commands.filter(
         (cmd) =>
-          cmd.data.name.match(/^(ticket|search|status|setlogs)/) ||
-          cmd.category === "utility"
+          cmd.category === "utility" ||
+          cmd.data.name.match(/^(ticket|search|status|setlogs)/)
       ),
       misc: commands.filter(
         (cmd) =>
+          !cmd.category &&
           !cmd.data.name.match(
             /^(info|serverinfo|help|ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban|ticket|search|status|setlogs)/
-          ) &&
-          cmd.category !== "info" &&
-          cmd.category !== "mod" &&
-          cmd.category !== "utility"
+          )
       ),
     };
 
     const pages = Object.entries(categories)
-      .filter(([cmds]) => cmds.length > 0)
+      .filter(([, cmds]) => cmds.length > 0)
       .map(([category, cmds], index, array) => {
         const description = cmds
           .map((cmd) => `**/${cmd.data.name}**\n${cmd.data.description}`)
           .join("\n\n");
+
         return new EmbedBuilder()
           .setTitle(
             `${category.charAt(0).toUpperCase() + category.slice(1)} Commands`
@@ -59,208 +100,88 @@ export default {
           .setDescription(description || "No commands in this category")
           .setColor(0x5865f2)
           .setFooter({
-            text: `Page ${index + 1}/${array.length}`,
+            text: `Page ${index + 1}/${array.length} • Use /help <command> for information`,
             iconURL: interaction.user.displayAvatarURL(),
           });
       });
 
-    if (pages.length === 0) {
-      return await interaction.editReply("No commands available.");
-    }
-
-    let currentPage = 0;
-
-    const getRow = (page) => {
-      return new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("prev")
-          .setLabel("◀")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId("next")
-          .setLabel("▶")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === pages.length - 1)
-      );
-    };
-
-    const message = await interaction.editReply({
-      embeds: [pages[currentPage]],
-      components: pages.length > 1 ? [getRow(currentPage)] : [],
-      fetchReply: true,
-    });
-
-    if (pages.length <= 1) return;
-
-    const collector = message.createMessageComponentCollector({
-      time: 300000,
-    });
-
-    collector.on("collect", async (i) => {
-      if (i.user.id !== interaction.user.id) {
-        await i.reply({
-          content: "Only the command user can navigate pages",
-          ephemeral: true,
-        });
-        return;
-      }
-
-      currentPage =
-        i.customId === "prev"
-          ? Math.max(0, currentPage - 1)
-          : Math.min(pages.length - 1, currentPage + 1);
-
-      await interaction.editReply({
-        embeds: [pages[currentPage]],
-        components: [getRow(currentPage)],
-      });
-
-      await i.deferUpdate().catch(() => null);
-    });
-
-    collector.on("end", () => {
-      if (!message.editable) return;
-
-      const disabledRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("prev")
-          .setLabel("◀")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId("next")
-          .setLabel("▶")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(true)
-      );
-
-      interaction.editReply({ components: [disabledRow] }).catch(() => null);
-    });
-  },
-
-  async prefixExecute(message) {
-    const commands = await getLocalCommands();
-
-    const categories = {
-      info: commands.filter(
-        (cmd) =>
-          cmd.data.name.match(/^(info|serverinfo|help)/) ||
-          cmd.category === "info"
-      ),
-      mod: commands.filter(
-        (cmd) =>
-          cmd.data.name.match(
-            /^(ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban)/
-          ) || cmd.category === "mod"
-      ),
-      utility: commands.filter(
-        (cmd) =>
-          cmd.data.name.match(/^(ticket|search|status|setlogs)/) ||
-          cmd.category === "utility"
-      ),
-      misc: commands.filter(
-        (cmd) =>
-          !cmd.data.name.match(
-            /^(info|serverinfo|help|ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban|ticket|search|status|setlogs)/
-          ) &&
-          cmd.category !== "info" &&
-          cmd.category !== "mod" &&
-          cmd.category !== "utility"
-      ),
-    };
-
-    const getCommandSyntax = (cmd) => {
-      const options = cmd.data.options || [];
-      const requiredOptions = options
-        .filter((opt) => opt.required)
-        .map((opt) => `<${opt.name}>`)
-        .join(" ");
-      const optionalOptions = options
-        .filter((opt) => !opt.required)
-        .map((opt) => `[${opt.name}]`)
-        .join(" ");
-
-      return `%${cmd.data.name} ${requiredOptions} ${optionalOptions}`.trim();
-    };
-
-    const pages = Object.entries(categories)
-      .filter(([cmds]) => cmds.length > 0)
-      .map(([category, cmds], index, array) => {
-        const description = cmds
-          .map((cmd) => {
-            const syntax = getCommandSyntax(cmd);
-            return `**${syntax}**\n${cmd.data.description}`;
-          })
-          .join("\n\n");
-
-        return new EmbedBuilder()
-          .setTitle(
-            `${category.charAt(0).toUpperCase() + category.slice(1)} Commands`
-          )
-          .setDescription(description || "No commands in this category")
-          .setColor(0x5865f2)
-          .setFooter({
-            text: `Page ${index + 1}/${array.length}`,
-            iconURL: message.author.displayAvatarURL(),
-          });
-      });
-
-    if (pages.length === 0) {
-      return message.reply("No commands found");
-    }
-
-    let currentPage = 0;
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId("prev")
-        .setLabel("◀")
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(true),
+        .setCustomId("help_prev")
+        .setLabel("Previous")
+        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId("next")
-        .setLabel("▶")
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(pages.length === 1)
+        .setCustomId("help_next")
+        .setLabel("Next")
+        .setStyle(ButtonStyle.Secondary)
     );
 
-    const response = await message.reply({
+    await interaction.editReply({
       embeds: [pages[0]],
       components: pages.length > 1 ? [row] : [],
     });
+  },
 
-    if (pages.length > 1) {
-      const collector = response.createMessageComponentCollector({
-        time: 60000,
-      });
+  async prefixExecute(message, args) {
+    const commands = await getLocalCommands();
+    const specificCommand = args[0]?.toLowerCase();
 
-      collector.on("collect", async (i) => {
-        if (i.user.id !== message.author.id) {
-          return i.reply({
-            content: "You cannot use these buttons",
-            ephemeral: true,
-          });
-        }
+    if (specificCommand) {
+      const command = commands.find((cmd) => cmd.data.name === specificCommand);
+      if (!command) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(`Command \`${specificCommand}\` not found`);
+        return message.reply({ embeds: [embed] });
+      }
 
-        if (i.customId === "prev" && currentPage > 0) {
-          currentPage--;
-        } else if (i.customId === "next" && currentPage < pages.length - 1) {
-          currentPage++;
-        }
-
-        row.components[0].setDisabled(currentPage === 0);
-        row.components[1].setDisabled(currentPage === pages.length - 1);
-
-        await i.update({
-          embeds: [pages[currentPage]],
-          components: [row],
+      const embed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle(`Command: ${command.data.name}`)
+        .setDescription(command.data.description)
+        .addFields({
+          name: "Category",
+          value: command.category || "Misc",
+          inline: true,
         });
+
+      if (command.data.options?.length) {
+        const options = command.data.options
+          .map(
+            (opt) =>
+              `\`${opt.name}\` - ${opt.description}${opt.required ? " (Required)" : ""}`
+          )
+          .join("\n");
+        embed.addFields({ name: "Options", value: options });
+      }
+
+      return message.reply({ embeds: [embed] });
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865f2)
+      .setTitle("Command Categories")
+      .setDescription("Use `%help <command>` for information about a command")
+      .addFields(
+        { name: "📝 Info", value: "`help`, `serverinfo`", inline: true },
+        {
+          name: "🛡️ Moderation",
+          value:
+            "`antiraid`, `ban`, `clearinfractions`, `jail`, `kick`, `logs`, `nuke`, `role`, `setlogs`, `timeout`, `unban`, `unjail`, `untimeout`, `warn`",
+          inline: true,
+        },
+        {
+          name: "🔧 Utility",
+          value: "`calculate`, `embed`, `prefix`, `search`, `ticket`",
+          inline: true,
+        },
+        { name: "🎮 Misc", value: "`ping`, `status`", inline: true }
+      )
+      .setFooter({
+        text: message.author.tag,
+        iconURL: message.author.displayAvatarURL(),
       });
 
-      collector.on("end", () => {
-        row.components.forEach((button) => button.setDisabled(true));
-        response.edit({ components: [row] }).catch(() => null);
-      });
-    }
+    return message.reply({ embeds: [embed] });
   },
 };
