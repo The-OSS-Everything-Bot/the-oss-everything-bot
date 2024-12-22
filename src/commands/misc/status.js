@@ -61,7 +61,9 @@ export default {
       if (message && type) {
         client.user.setPresence({
           status: status,
-          activities: [{ name: message, type: ActivityType[type] }],
+          activities: [
+            { name: message, type: ActivityType[type.toUpperCase()] },
+          ],
         });
       } else {
         client.user.setPresence({ status: status });
@@ -119,17 +121,18 @@ export default {
         return message.reply({ embeds: [embed] });
       }
 
-      const type = args[1].toUpperCase();
-      if (!validActivities.includes(type)) {
+      const activityMessage = args.slice(1, -1).join(" ");
+      const type = args[args.length - 1]?.toUpperCase();
+
+      if (!type || !validActivities.includes(type)) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
           .setDescription(
-            "Please provide a valid activity type: PLAYING, STREAMING, LISTENING, WATCHING, or COMPETING"
+            "Please provide a valid activity type: playing, streaming, listening, watching, or competing"
           );
         return message.reply({ embeds: [embed] });
       }
 
-      const activityMessage = args.slice(2).join(" ");
       if (!activityMessage) {
         const embed = new EmbedBuilder()
           .setColor(0xff0000)
@@ -137,9 +140,17 @@ export default {
         return message.reply({ embeds: [embed] });
       }
 
+      const activityTypeMap = {
+        PLAYING: ActivityType.Playing,
+        STREAMING: ActivityType.Streaming,
+        LISTENING: ActivityType.Listening,
+        WATCHING: ActivityType.Watching,
+        COMPETING: ActivityType.Competing,
+      };
+
       client.user.setPresence({
         status,
-        activities: [{ name: activityMessage, type: ActivityType[type] }],
+        activities: [{ name: activityMessage, type: activityTypeMap[type] }],
       });
 
       const embed = new EmbedBuilder()
