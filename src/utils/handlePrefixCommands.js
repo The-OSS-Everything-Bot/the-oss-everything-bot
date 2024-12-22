@@ -35,7 +35,30 @@ export default async (client, message) => {
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const commandName = args.shift().toLowerCase();
+  let commandName = args.shift().toLowerCase();
+
+  const aliasCacheKey = `user:${message.guildId}:${message.author.id}:aliases`;
+  const cachedAliases = await global.redis.get(aliasCacheKey);
+  let aliases = {};
+
+  if (cachedAliases) {
+    aliases = JSON.parse(cachedAliases);
+  } else {
+    const guildDB = await getGuildDB(message.guildId);
+    const result = await guildDB.execute({
+      sql: "SELECT aliases FROM user_settings WHERE guild_id = ? AND user_id = ?",
+      args: [message.guildId, message.author.id],
+    });
+
+    if (result.rows[0]?.aliases) {
+      aliases = JSON.parse(result.rows[0].aliases);
+      await global.redis.set(aliasCacheKey, JSON.stringify(aliases));
+    }
+  }
+
+  if (aliases[commandName]) {
+    commandName = aliases[commandName];
+  }
 
   const commands = await getLocalCommands();
   const command = commands.find((cmd) => cmd.data.name === commandName);

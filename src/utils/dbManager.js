@@ -46,6 +46,9 @@ async function migrateDB(db) {
         antiraid_msg_threshold: "INTEGER DEFAULT 5",
         antiraid_time_window: "INTEGER DEFAULT 5",
       },
+      user_settings: {
+        aliases: "TEXT DEFAULT '{}'",
+      },
     };
 
     for (const [table, columns] of Object.entries(tables)) {
@@ -117,6 +120,7 @@ async function initGuildDB(db) {
       guild_id TEXT,
       user_id TEXT,
       prefix TEXT,
+      aliases TEXT DEFAULT '{}',
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       PRIMARY KEY (guild_id, user_id)

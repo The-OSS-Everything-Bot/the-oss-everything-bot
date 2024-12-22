@@ -172,7 +172,7 @@ export default {
         },
         {
           name: "🔧 Utility",
-          value: "`calculate`, `embed`, `prefix`, `search`, `ticket`",
+          value: "`alias`, `calculate`, `embed`, `prefix`, `search`, `ticket`",
           inline: true,
         },
         { name: "🎮 Misc", value: "`ping`, `status`", inline: true }
