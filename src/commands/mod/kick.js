@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   PermissionFlagsBits,
   EmbedBuilder,
+  AuditLogEvent,
 } from "discord.js";
 import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
 
@@ -63,7 +64,7 @@ export default {
       await handleServerLogs(
         interaction.client,
         interaction.guild,
-        "COMMAND_KICK",
+        AuditLogEvent.MemberKick,
         {
           target: user,
           executor: interaction.user,
@@ -121,11 +122,16 @@ export default {
         .setDescription(`Successfully kicked <@${user.id}>`);
       await message.reply({ embeds: [embed] });
 
-      await handleServerLogs(message.client, message.guild, "COMMAND_KICK", {
-        target: user,
-        executor: message.author,
-        reason,
-      });
+      await handleServerLogs(
+        message.client,
+        message.guild,
+        AuditLogEvent.MemberKick,
+        {
+          target: user,
+          executor: message.author,
+          reason,
+        }
+      );
     } catch (error) {
       console.error("\x1b[31m", `[Error] ${error} at kick.js`);
       const embed = new EmbedBuilder()

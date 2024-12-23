@@ -16,7 +16,7 @@ export default async (client, ban) => {
     await handleServerLogs(client, ban.guild, AuditLogEvent.MemberBanRemove, {
       target: ban.user,
       executor: log?.executor || client.user,
-      reason: log?.reason,
+      reason: log?.reason || "Ban removed",
     });
   }
 };

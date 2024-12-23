@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
+import { AuditLogEvent } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -56,7 +57,7 @@ export default {
       await handleServerLogs(
         interaction.client,
         interaction.guild,
-        "COMMAND_BAN",
+        AuditLogEvent.MemberBanAdd,
         {
           target: user,
           executor: interaction.user,
@@ -115,11 +116,16 @@ export default {
         await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
-      await handleServerLogs(message.client, message.guild, "COMMAND_BAN", {
-        target: user,
-        executor: message.author,
-        reason,
-      });
+      await handleServerLogs(
+        message.client,
+        message.guild,
+        AuditLogEvent.MemberBanAdd,
+        {
+          target: user,
+          executor: message.author,
+          reason,
+        }
+      );
 
       const embed = new EmbedBuilder()
         .setColor(0x57f287)

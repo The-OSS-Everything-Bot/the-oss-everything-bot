@@ -2,6 +2,7 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   EmbedBuilder,
+  AuditLogEvent,
 } from "discord.js";
 import { getUser, createUser, updateUserLogs } from "../../schemas/user.js";
 import handleServerLogs from "../../events/serverEvents/handleServerLogs.js";
@@ -52,12 +53,11 @@ export default {
       await handleServerLogs(
         interaction.client,
         interaction.guild,
-        "COMMAND_BAN",
+        AuditLogEvent.MemberBanRemove,
         {
           target: user,
           executor: interaction.user,
           reason: "Ban removed",
-          type: "unban",
         }
       );
 
@@ -111,12 +111,16 @@ export default {
         await updateUserLogs(user.id, guild.id, "bans", bans);
       }
 
-      await handleServerLogs(message.client, message.guild, "COMMAND_BAN", {
-        target: user,
-        executor: message.author,
-        reason: "Ban removed",
-        type: "unban",
-      });
+      await handleServerLogs(
+        message.client,
+        message.guild,
+        AuditLogEvent.MemberBanRemove,
+        {
+          target: user,
+          executor: message.author,
+          reason: "Ban removed",
+        }
+      );
 
       const embed = new EmbedBuilder()
         .setColor(0x57f287)

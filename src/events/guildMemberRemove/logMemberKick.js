@@ -16,7 +16,7 @@ export default async (client, member) => {
     await handleServerLogs(client, member.guild, AuditLogEvent.MemberKick, {
       target: member.user,
       executor: log?.executor || client.user,
-      reason: log?.reason,
+      reason: log?.reason || "No reason provided",
     });
   }
 };
