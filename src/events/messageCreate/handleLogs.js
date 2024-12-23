@@ -299,9 +299,11 @@ export default async (client, message) => {
     }
 
     const containsFilteredWord =
-      FILTERED_WORDS.some((word) =>
-        message.content.toLowerCase().includes(word.toLowerCase())
-      ) && !message.content.startsWith("%");
+      message.content &&
+      FILTERED_WORDS.some((word) => {
+        const regex = new RegExp(`\\b${word}\\b`, "i");
+        return regex.test(message.content);
+      });
 
     if (containsFilteredWord) {
       console.log("[Debug] Filtered word detected, sending log");
