@@ -81,7 +81,7 @@ export default {
         (cmd) =>
           !cmd.category &&
           !cmd.data.name.match(
-            /^(info|serverinfo|help|ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban|ticket|search|status|setlogs)/
+            /^(info|serverinfo|help|ban|kick|warn|timeout|jail|role|logs|clearinfractions|untimeout|unban|ticket|search|status|setlogs|commit)/
           )
       ),
     };
@@ -175,7 +175,11 @@ export default {
           value: "`alias`, `calculate`, `embed`, `prefix`, `search`, `ticket`",
           inline: true,
         },
-        { name: "🎮 Misc", value: "`ping`, `status`", inline: true }
+        {
+          name: "🎮 Misc",
+          value: "`ping`, `status`, `commit`",
+          inline: true,
+        }
       )
       .setFooter({
         text: message.author.tag,
